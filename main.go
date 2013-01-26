@@ -7,7 +7,8 @@ import (
 	"net/http"
 )
 
-const Port = ":8090"
+const port = ":8090"
+const base string = "github.com/jakecoffman/gorunner/web/"
 
 func main() {
 	r := mux.NewRouter()
@@ -17,6 +18,7 @@ func main() {
 	r.HandleFunc("/jobs/{job}", handlers.Job)
 
 	http.Handle("/", r)
-	fmt.Println("Running on " + Port)
-	http.ListenAndServe(Port, nil)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(base+"static/"))))
+	fmt.Println("Running on " + port)
+	http.ListenAndServe(port, nil)
 }
