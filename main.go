@@ -2,13 +2,21 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/jakecoffman/gorunner/handlers"
 	"net/http"
-	"github.com/jakecoffman/gorunner/server"
 )
 
+const Port = ":8090"
+
 func main() {
-	http.HandleFunc("/", server.Handler)
-	http.HandleFunc("/(.*)", server.Handler2)
-	fmt.Println("Running on port 8090")
-	http.ListenAndServe(":8090", nil)
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", handlers.Jobs)
+	r.HandleFunc("/jobs", handlers.Jobs)
+	r.HandleFunc("/jobs/{job}", handlers.Job)
+
+	http.Handle("/", r)
+	fmt.Println("Running on " + Port)
+	http.ListenAndServe(Port, nil)
 }
