@@ -1,0 +1,33 @@
+{{ define "title" }}{{ .Name }} | gorunner{{ end }}
+
+{{ define "head" }}
+<link rel="stylesheet" href="/static/codemirror/lib/codemirror.css">
+{{end}}
+
+{{ define "navigation" }}
+	<li class="nav-header">Navigation</li>
+	<li><a href="/jobs">Jobs</a></li>
+	<li class="active"><a href="/tasks">Tasks</a></li>
+	<li class="nav-header">Actions</li>
+	<li><a href="#" onclick="return confirm('Delete?')">Delete Task</a></li>
+{{ end }}
+
+{{ define "content" }}
+	<h1>{{ .Name }}</h1>
+	<textarea id="taskScript">Greets{{ .Script }}</textarea>
+{{ end }}
+
+{{ define "bottom" }}
+{{ end }}
+
+{{ define "scripts" }}
+	<script src="/static/codemirror/lib/codemirror.js"></script>
+	<script src="/static/codemirror/mode/shell/shell.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			var cm = CodeMirror.fromTextArea(taskScript, {
+				lineNumbers: true
+			});
+		});
+	</script>
+{{ end }}

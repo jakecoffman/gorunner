@@ -1,0 +1,52 @@
+{{ define "title" }}{{ .Name }} | gorunner{{ end }}
+
+{{ define "head" }}
+{{end}}
+
+{{ define "navigation" }}
+	<li class="nav-header">Navigation</li>
+	<li class="active"><a href="/jobs">Jobs</a></li>
+	<li><a href="/tasks">Tasks</a></li>
+	<li class="nav-header">Actions</li>
+	<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
+	<li><a href="#" onclick="return confirm('Delete?')">Delete Job</a></li>
+{{ end }}
+
+{{ define "content" }}
+	<h1>{{ .Name }}</h1>
+	{{ if .Tasks }}
+		<p>The following Tasks are defined for this job:</p>
+		<ul>
+		{{ range .Tasks }}
+			<li>{{ .Name }}</li>
+		{{ end }}
+		</ul>
+	{{ else }}
+		<p>There are no Tasks defined for this job.</p>
+	{{ end }}
+{{ end }}
+
+{{ define "bottom" }}
+<div id="bind-task" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h3 id="myModalLabel">Bind Task</h3>
+	</div>
+	<div class="modal-body">
+		<p>Select a task from the list to bind to this Job.</p>
+		<form name="bind-task" action="/tasks/{{ .Name }}" method="post">
+			<label for="task">Available Tasks</label>
+			<select name="task" id="task">
+				<option>Dummy option</option>
+			</select>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+		<button class="btn btn-primary" onclick="document.forms['add-job'].submit();">Add</button>
+	</div>
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+{{ end }}

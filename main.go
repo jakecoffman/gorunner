@@ -21,6 +21,7 @@ func main() {
 	r.HandleFunc("/jobs/{job}", handlers.Job)
 
 	r.HandleFunc("/tasks", handlers.Tasks)
+	r.HandleFunc("/tasks/{task}", handlers.Task)
 
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))

@@ -1,6 +1,10 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+)
 
 type Task struct {
 	Name   string
@@ -9,6 +13,19 @@ type Task struct {
 
 type TaskList struct {
 	tasks []Task
+}
+
+func (t TaskList) GetTasks() []Task{
+	return t.tasks
+}
+
+func (t TaskList) Get(name string) (Task,error) {
+	for _, task := range(t.tasks){
+		if task.Name == name{
+			return task, nil
+		}
+	}
+	return Task{}, errors.New(fmt.Sprintf("Task '%s' not found", name))
 }
 
 func (t *TaskList) Append(task Task){
@@ -28,8 +45,4 @@ func (t *TaskList) Loads(s string) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (t TaskList) GetTasks() []Task{
-	return t.tasks
 }

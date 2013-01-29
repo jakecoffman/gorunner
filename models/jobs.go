@@ -1,6 +1,10 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+)
 
 type Job struct {
 	Name  string
@@ -13,6 +17,15 @@ type JobList struct {
 
 func (j JobList) GetJobs() []Job{
 	return j.jobs
+}
+
+func (j JobList) Get(name string) (Job,error) {
+	for _, job := range(j.jobs){
+		if job.Name == name{
+			return job, nil
+		}
+	}
+	return Job{}, errors.New(fmt.Sprintf("Job '%s' not found", name))
 }
 
 func (j *JobList) Append(job Job){
