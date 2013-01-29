@@ -5,12 +5,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/handlers"
 	"net/http"
+	"os"
 )
 
 const port = ":8090"
-const base string = "github.com/jakecoffman/gorunner/web/"
 
 func main() {
+	wd, _ := os.Getwd()
+	println("Working directory", wd)
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", handlers.Jobs)
@@ -18,7 +21,7 @@ func main() {
 	r.HandleFunc("/jobs/{job}", handlers.Job)
 
 	http.Handle("/", r)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(base+"static/"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
 	fmt.Println("Running on " + port)
 	http.ListenAndServe(port, nil)
 }
