@@ -11,6 +11,10 @@ type JobList struct {
 	jobs []Job
 }
 
+func (j JobList) GetJobs() []Job{
+	return j.jobs
+}
+
 func (j *JobList) Append(job Job){
 	j.jobs = append(j.jobs, job)
 }

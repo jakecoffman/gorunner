@@ -29,3 +29,7 @@ func (t *TaskList) Loads(s string) {
 		panic(err)
 	}
 }
+
+func (t TaskList) GetTasks() []Task{
+	return t.tasks
+}

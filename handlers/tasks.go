@@ -7,27 +7,26 @@ import (
 	"github.com/jakecoffman/gorunner/models"
 )
 
-const jobsFile = "jobs.json"
+const tasksFile = "tasks.json"
 
-
-var jobs = template.Must(template.ParseFiles(
+var tasks = template.Must(template.ParseFiles(
 	"web/templates/_base.html",
-	"web/templates/jobs.html",
+	"web/templates/tasks.html",
 ))
 
-func Jobs(w http.ResponseWriter, r *http.Request) {
-	var jobList models.JobList
-	db.Load(&jobList, jobsFile)
+func Tasks(w http.ResponseWriter, r *http.Request) {
+	var taskList models.TaskList
+	db.Load(&taskList, tasksFile)
 
 	if r.Method == "GET"{
-		if err := jobs.Execute(w, jobList); err != nil {
+		if err := tasks.Execute(w, taskList); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		jobList.Append(models.Job{name, []models.Task{}})
-		db.Save(&jobList, jobsFile)
-		if err := jobs.Execute(w, jobList); err != nil {
+		taskList.Append(models.Task{name, ""})
+		db.Save(&taskList, tasksFile)
+		if err := tasks.Execute(w, taskList); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

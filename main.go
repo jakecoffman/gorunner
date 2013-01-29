@@ -20,6 +20,8 @@ func main() {
 	r.HandleFunc("/jobs", handlers.Jobs)
 	r.HandleFunc("/jobs/{job}", handlers.Job)
 
+	r.HandleFunc("/tasks", handlers.Tasks)
+
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
 	fmt.Println("Running on " + port)
