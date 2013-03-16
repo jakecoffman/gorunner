@@ -11,16 +11,6 @@ import (
 
 const jobsFile = "jobs.json"
 
-var jobsTemplate = template.Must(template.ParseFiles(
-	"web/templates/_base.html",
-	"web/templates/jobs.html",
-))
-
-var jobTemplate = template.Must(template.ParseFiles(
-	"web/templates/_base.html",
-	"web/templates/job.html",
-))
-
 func Jobs(w http.ResponseWriter, r *http.Request) {
 	var jobList models.JobList
 	db.Load(&jobList, jobsFile)
@@ -35,6 +25,11 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
 		return
 	}
+
+	var jobsTemplate = template.Must(template.ParseFiles(
+		"web/templates/_base.html",
+		"web/templates/jobs.html",
+	))
 
 	if err := jobsTemplate.Execute(w, jobList); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,6 +49,11 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		;
 	}
+
+	var jobTemplate = template.Must(template.ParseFiles(
+		"web/templates/_base.html",
+		"web/templates/job.html",
+	))
 
 	if err := jobTemplate.Execute(w, job); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/handlers"
+	"github.com/jakecoffman/gorunner/execution"
 	"net/http"
 	"os"
+	"net"
 )
 
 const port = ":8090"
@@ -14,7 +16,14 @@ func main() {
 	wd, _ := os.Getwd()
 	println("Working directory", wd)
 
+	server := &http.Server{Addr: port, Handler: nil }
+	l, e := net.Listen("tcp", port)
+	if e != nil {
+		panic(e)
+	}
+
 	r := mux.NewRouter()
+	r = mux.NewRouter()
 
 	r.HandleFunc("/", handlers.Jobs)
 	r.HandleFunc("/jobs", handlers.Jobs)
@@ -25,6 +34,23 @@ func main() {
 
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
-	fmt.Println("Running on " + port)
-	http.ListenAndServe(port, nil)
+
+	go func() {
+		// run stuff outside of the main loop
+	}()
+
+	go func() {
+		for {
+			fmt.Println("Running on " + port)
+			server.Serve(l)
+			l, e = net.Listen("tcp", port)
+			if e != nil {
+				panic(e)
+			}
+		}
+	}()
+	defer l.Close()
+
+	<-execution.Kill
+	println("Dead")
 }
