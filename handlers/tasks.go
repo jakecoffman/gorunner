@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"github.com/jakecoffman/gorunner/db"
 	"github.com/jakecoffman/gorunner/models"
-	"github.com/jakecoffman/gorunner/execution"
 	"github.com/gorilla/mux"
+	"strings"
 )
 
 const tasksFile = "tasks.json"
@@ -20,12 +20,14 @@ func Tasks(w http.ResponseWriter, r *http.Request) {
 		"web/templates/tasks.html",
 	))
 
-	execution.Kill<- true
-	return
-
 	if r.Method == "GET" {
-		if err := tasksTemplate.Execute(w, taskList); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if strings.Contains(r.Header.Get("Accept"), "text/html") {
+			if err := tasksTemplate.Execute(w, taskList); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			w.Header().Set("Content-Type", "text/plain")
+			w.Write([]byte(taskList.Dumps()))
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")

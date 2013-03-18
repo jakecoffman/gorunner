@@ -47,15 +47,19 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		;
+		var jobTemplate = template.Must(template.ParseFiles(
+			"web/templates/_base.html",
+			"web/templates/job.html",
+		))
+
+		if err := jobTemplate.Execute(w, job); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	} else if r.Method == "POST" {
+		task := r.FormValue("task")
+		println(task)
 	}
 
-	var jobTemplate = template.Must(template.ParseFiles(
-		"web/templates/_base.html",
-		"web/templates/job.html",
-	))
 
-	if err := jobTemplate.Execute(w, job); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }

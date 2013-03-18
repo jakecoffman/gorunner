@@ -36,17 +36,44 @@
 		<p>Select a task from the list to bind to this Job.</p>
 		<form name="bind-task" action="/tasks/{{ .Name }}" method="post">
 			<label for="task">Available Tasks</label>
-			<select name="task" id="task">
-				<option>Dummy option</option>
-			</select>
+			<select name="task" id="task"></select>
 		</form>
 	</div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-		<button class="btn btn-primary" onclick="document.forms['add-job'].submit();">Add</button>
+		<button class="btn btn-primary" data-dismiss="modal" id="bind">Add</button>
 	</div>
 </div>
 {{ end }}
 
 {{ define "scripts" }}
+<script type="text/javascript">
+	var ajax = $.ajax({
+		url: "/tasks",
+		dataType: "json"
+	});
+
+	ajax.done(function (data, status, jqxhr){
+		var tasks = JSON.parse(jqxhr.responseText);
+		var option = $('<option>');
+		var options = [];
+		$.each(tasks, function(i, v){
+			options.push(option.clone().attr('value', v.Name).text(v.Name))
+		});
+		$('#task').append(options);
+	});
+
+	$('#bind').click(function(evt){
+		var task = $("#task").find(":selected").val();
+		var ajax = $.ajax({
+			url: '/jobs/{{ .Name }}',
+			type: "post",
+			data: "task=" + task
+		});
+
+		ajax.done(function(){
+			window.location.reload();
+		});
+	});
+</script>
 {{ end }}
