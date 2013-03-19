@@ -9,7 +9,7 @@
 	<li><a href="/tasks">Tasks</a></li>
 	<li class="nav-header">Actions</li>
 	<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
-	<li><a href="#" onclick="return confirm('Delete?')">Delete Job</a></li>
+	<li><a href="#" id="delete-job">Delete Job</a></li>
 {{ end }}
 
 {{ define "content" }}
@@ -75,5 +75,20 @@
 			window.location.reload();
 		});
 	});
+
+	$('#delete-job').click(function(evt){
+		if(!confirm('Delete?')){
+			return;
+		}
+
+		var ajax = $.ajax({
+			url: "/jobs/{{ .Name }}",
+			type: "delete"
+		});
+
+		ajax.done(function(){
+			window.location = "/jobs";
+		});
+	})
 </script>
 {{ end }}

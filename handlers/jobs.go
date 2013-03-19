@@ -19,7 +19,11 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		;
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		jobList.Append(models.Job{name, []models.Task{}})
+		err := jobList.Append(models.Job{name, []models.Task{}})
+		if err != nil{
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		db.Save(&jobList, jobsFile)
 	} else {
 		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
@@ -59,6 +63,15 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		task := r.FormValue("task")
 		println(task)
+	} else if r.Method == "DELETE" {
+		err := jobList.Delete(job.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		db.Save(&jobList, jobsFile)
+	} else {
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 
 

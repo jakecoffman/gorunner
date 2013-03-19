@@ -54,10 +54,29 @@
 		</div>
 		<div class="modal-footer">
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<button class="btn btn-primary" onclick="document.forms['add-job'].submit();">Add</button>
+			<button class="btn btn-primary" id="add-job-submit">Add</button>
 		</div>
 	</div>
 {{ end }}
 
 {{ define "scripts" }}
+<script type="text/javascript">
+	$('#add-job-submit').click(function(evt){
+		var name = $('#name').val();
+
+		var ajax = $.ajax({
+			url: "/jobs",
+			type: "post",
+			data: {name: name}
+		});
+
+		ajax.done(function(){
+			window.location = "/jobs/" + name;
+		});
+
+		ajax.fail(function(d){
+			alert(d.responseText);
+		});
+	})
+</script>
 {{ end }}
