@@ -18,10 +18,18 @@
 	<p>There are not any jobs yet. You can <a href="#add-job" role="button" data-toggle="modal">add one now</a>!</p>
 {{ else }}
 	<table class="table">
+		<colgroup>
+			<col style="width: 50%">
+			<col style="width: 25%">
+			<col style="width: 25%">
+			<col style="width: 0">
+		</colgroup>
 		<thead>
 		<tr>
 			<th>Job</th>
 			<th>Tasks</th>
+			<th>Status</th>
+			<th>Execute</th>
 		</tr>
 		</thead>
 		<tbody>
@@ -33,6 +41,8 @@
 			{{ else }}
 			<td>0</td>
 			{{ end }}
+			<td><span class="label">new</span></td>
+			<td><button class="btn btn-mini go" data-job="{{.Name}}"><i class="icon-play"></i></button></td>
 		</tr>
 		{{ end }}
 		</tbody>
