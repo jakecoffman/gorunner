@@ -52,17 +52,26 @@ func Task(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-;
+		var taskTemplate = template.Must(template.ParseFiles(
+			"web/templates/_base.html",
+			"web/templates/task.html",
+		))
+
+		if err := taskTemplate.Execute(w, task); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else if r.Method == "PUT" {
+		script := r.FormValue("script")
+		task.Script = script
+		taskList.Delete(task.Name)
+		taskList.Append(task)
+		db.Save(&taskList, tasksFile)
+	} else if r.Method == "DELETE" {
+		taskList.Delete(task.Name)
+		db.Save(&taskList, tasksFile)
 	} else {
 		http.Error(w, "Unknown method type" , http.StatusMethodNotAllowed)
 	}
 
-	var taskTemplate = template.Must(template.ParseFiles(
-		"web/templates/_base.html",
-		"web/templates/task.html",
-	))
 
-	if err := taskTemplate.Execute(w, task); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }

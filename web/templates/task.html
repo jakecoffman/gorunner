@@ -9,12 +9,14 @@
 	<li><a href="/jobs">Jobs</a></li>
 	<li class="active"><a href="/tasks">Tasks</a></li>
 	<li class="nav-header">Actions</li>
-	<li><a href="#" onclick="return confirm('Delete?')">Delete Task</a></li>
+	<li><a href="#" id="delete-task">Delete Task</a></li>
 {{ end }}
 
 {{ define "content" }}
 	<h1>{{ .Name }}</h1>
-	<textarea id="taskScript">Greets{{ .Script }}</textarea>
+	<textarea id="taskScript">{{ .Script }}</textarea>
+	<hr/>
+	<button class="btn" id="save-changes">Save</button>
 {{ end }}
 
 {{ define "bottom" }}
@@ -24,10 +26,41 @@
 	<script src="/static/codemirror/lib/codemirror.js"></script>
 	<script src="/static/codemirror/mode/shell/shell.js"></script>
 	<script type="text/javascript">
+		var editor = null;
 		$(function(){
-			var cm = CodeMirror.fromTextArea(taskScript, {
+			editor = CodeMirror.fromTextArea(document.getElementById('taskScript'), {
 				lineNumbers: true
 			});
+		});
+
+		$('#save-changes').click(function(evt){
+			evt.preventDefault();
+			var script = editor.getValue();
+
+			var ajax = $.ajax({
+				url: "/tasks/{{ .Name }}",
+				type: "put",
+				data: {script: script}
+			});
+
+			ajax.done(function(evt){
+				window.location = "/tasks"
+			});
+		});
+
+		$('#delete-task').click(function(evt){
+			if(!confirm("Really delete {{ .Name }}?")){
+				return;
+			}
+
+			var ajax = $.ajax({
+				url: "/tasks/{{ .Name }}",
+				type: "delete"
+			});
+
+			ajax.done(function(){
+				window.location = "/tasks";
+			})
 		});
 	</script>
 {{ end }}

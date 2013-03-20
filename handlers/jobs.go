@@ -15,12 +15,19 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 	var jobList models.JobList
 	db.Load(&jobList, jobsFile)
 
-	if r.Method == "GET"{
-		;
+	if r.Method == "GET" {
+		var jobsTemplate = template.Must(template.ParseFiles(
+			"web/templates/_base.html",
+			"web/templates/jobs.html",
+		))
+
+		if err := jobsTemplate.Execute(w, jobList); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		err := jobList.Append(models.Job{name, []models.Task{}})
-		if err != nil{
+		err := jobList.Append(models.Job{name, []string{}})
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -28,15 +35,6 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
 		return
-	}
-
-	var jobsTemplate = template.Must(template.ParseFiles(
-		"web/templates/_base.html",
-		"web/templates/jobs.html",
-	))
-
-	if err := jobsTemplate.Execute(w, jobList); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -62,7 +60,10 @@ func Job(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.Method == "POST" {
 		task := r.FormValue("task")
-		println(task)
+		job.Tasks = append(job.Tasks, task)
+		jobList.Delete(job.Name)
+		jobList.Append(job)
+		db.Save(&jobList, jobsFile)
 	} else if r.Method == "DELETE" {
 		err := jobList.Delete(job.Name)
 		if err != nil {
@@ -70,6 +71,7 @@ func Job(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		db.Save(&jobList, jobsFile)
+
 	} else {
 		http.Error(w, "", http.StatusMethodNotAllowed)
 	}

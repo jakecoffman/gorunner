@@ -1,6 +1,19 @@
 {{ define "title" }}{{ .Name }} | gorunner{{ end }}
 
 {{ define "head" }}
+<link rel="stylesheet" href="/static/css/jquery-ui.min.css"/>
+<style>
+	ul {
+		list-style-type: none;
+		padding: 0;
+		margin: 0;
+	}
+	li {
+		margin: 5px;
+		padding: 5px;
+		width: 150px;
+	}
+</style>
 {{end}}
 
 {{ define "navigation" }}
@@ -16,14 +29,16 @@
 	<h1>{{ .Name }}</h1>
 	{{ if .Tasks }}
 		<p>The following Tasks are defined for this job:</p>
-		<ul>
+		<ul id="sortable">
 		{{ range .Tasks }}
-			<li>{{ .Name }}</li>
+			<li class="ui-state-default">{{ . }}<a href="#" class="remove" data-task="{{.}}"> <i class="icon-remove pull-right"></i></a> </li>
 		{{ end }}
 		</ul>
 	{{ else }}
 		<p>There are no Tasks defined for this job.</p>
 	{{ end }}
+	<hr/>
+	<button id="save-changes" class="btn">Save</button>
 {{ end }}
 
 {{ define "bottom" }}
@@ -47,7 +62,10 @@
 {{ end }}
 
 {{ define "scripts" }}
+<script src="/static/js/jquery-ui.min.js"></script>
 <script type="text/javascript">
+	$('#sortable').sortable({revert:true});
+
 	var ajax = $.ajax({
 		url: "/tasks",
 		dataType: "json"
@@ -68,12 +86,27 @@
 		var ajax = $.ajax({
 			url: '/jobs/{{ .Name }}',
 			type: "post",
-			data: "task=" + task
+			data: {task:task}
 		});
 
 		ajax.done(function(){
 			window.location.reload();
 		});
+	});
+
+	$('.remove').click(function(evt){
+		var task = $(this).attr('data-task');
+		if(!confirm("Really delete " + task + "?")){
+			return;
+		}
+		var ajax = $.ajax({
+			url: "/jobs/{{.Name}}/" + task,
+			type: "delete"
+		});
+
+		ajax.done(function(){
+			window.location = "/jobs/{{.Name}}";
+		})
 	});
 
 	$('#delete-job').click(function(evt){

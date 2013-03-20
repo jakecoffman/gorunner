@@ -32,6 +32,23 @@ func (t *TaskList) Append(task Task){
 	t.tasks = append(t.tasks, task)
 }
 
+func (tl *TaskList) Delete(name string) error {
+	var i int
+	var t Task
+	var found bool = false
+	for i, t = range(tl.tasks) {
+		if t.Name == name {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.New("Could not find task to update")
+	}
+	tl.tasks = tl.tasks[:i+copy(tl.tasks[i:], tl.tasks[i+1:])]
+	return nil
+}
+
 func (t TaskList) Dumps() string {
 	bytes, err := json.Marshal(t.tasks)
 	if err != nil {

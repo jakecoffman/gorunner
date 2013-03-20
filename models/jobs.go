@@ -8,7 +8,7 @@ import (
 
 type Job struct {
 	Name  string
-	Tasks []Task
+	Tasks []string
 }
 
 type JobList struct {
@@ -55,8 +55,7 @@ func (j *JobList) Delete(name string) error {
 	if !found {
 		return errors.New("Job not found for deletion")
 	}
-	copy(j.jobs[i:], j.jobs[:i])
-	j.jobs = j.jobs[:len(j.jobs) - 1]
+	j.jobs = j.jobs[:i+copy(j.jobs[i:], j.jobs[i+1:])]
 	return nil
 }
 
