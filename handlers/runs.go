@@ -28,6 +28,8 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		var jobsList models.JobList
 		db.Load(&jobsList, jobsFile)
+		var tasksList models.TaskList
+		db.Load(&tasksList, tasksFile)
 
 		jobName := r.FormValue("job")
 		job, err := jobsList.Get(jobName)
@@ -38,7 +40,15 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		run := models.Run{UUID: id.String(), Job: job}
+		var tasks []models.Task
+		for _, taskName := range(job.Tasks){
+			task, err := tasksList.Get(taskName)
+			if err != nil {
+				panic(err)
+			}
+			tasks = append(tasks, task)
+		}
+		run := models.Run{UUID: id.String(), Job: job, Tasks: tasks}
 		err = runsList.Append(run)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

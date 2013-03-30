@@ -10,6 +10,7 @@ import (
 type Run struct {
 	UUID  string
 	Job   Job
+	Tasks []Task
 	Start time.Time
 	End   time.Time
 }
