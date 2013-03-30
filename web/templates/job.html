@@ -1,14 +1,14 @@
-{{ define "title" }}{{ .Name }} | gorunner{{ end }}
+{{ define "title" }}{{ .Name }}{{ end }}
 
 {{ define "head" }}
 <link rel="stylesheet" href="/static/css/jquery-ui.min.css"/>
 <style>
-	ul {
+	.ui-sortable ul {
 		list-style-type: none;
 		padding: 0;
 		margin: 0;
 	}
-	li {
+	.ui-sortable li {
 		margin: 5px;
 		padding: 5px;
 		width: 150px;
@@ -18,9 +18,11 @@
 
 {{ define "navigation" }}
 	<li class="nav-header">Navigation</li>
-	<li class="active"><a href="/jobs">Jobs</a></li>
+	<li><a href="/jobs">Jobs</a></li>
 	<li><a href="/tasks">Tasks</a></li>
+	<li><a href="/runs">Runs</a></li>
 	<li class="nav-header">Actions</li>
+	<li><a href="#" id="run-job">Run Job</a></li>
 	<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
 	<li><a href="#" id="delete-job">Delete Job</a></li>
 {{ end }}
@@ -122,6 +124,22 @@
 		ajax.done(function(){
 			window.location = "/jobs";
 		});
-	})
+	});
+
+	$('#run-job').click(function(evt){
+		var ajax = $.ajax({
+			url: "/runs",
+			type: "post",
+			data: {job: "{{.Name}}"}
+		});
+
+		ajax.done(function(data){
+			location.reload();
+		});
+
+		ajax.fail(function(){
+			alert("failed");
+		})
+	});
 </script>
 {{ end }}

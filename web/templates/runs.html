@@ -1,0 +1,45 @@
+{{ define "title" }}Runs{{ end }}
+
+{{ define "head" }}
+{{end}}
+
+{{ define "navigation" }}
+<li class="nav-header">Navigation</li>
+<li><a href="/jobs">Jobs</a></li>
+<li><a href="/tasks">Tasks</a></li>
+<li class="active"><a href="/tasks">Runs</a></li>
+<li class="nav-header">Actions</li>
+<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
+<li><a href="#" id="delete-job">Delete Job</a></li>
+{{ end }}
+
+{{ define "content" }}
+<h1>Runs</h1>
+<table class="table">
+	<thead>
+	<tr>
+		<th>UUID</th>
+		<th>Job</th>
+		<th>Start</th>
+		<th>End</th>
+	</tr>
+	</thead>
+	<tbody>
+	{{ range .GetRuns }}
+	<tr>
+		<td><a href="/runs/{{ .UUID }}">{{ .UUID }}</a></td>
+		<td><a href="/jobs/{{.Job.Name}}">{{ .Job.Name }}</a></td>
+		<td>{{.Start}}</td>
+		<td>{{.End}}</td>
+	</tr>
+	{{ end }}
+	</tbody>
+</table>
+{{ end }}
+
+{{ define "bottom" }}
+{{ end }}
+
+{{ define "scripts" }}
+
+{{ end }}
