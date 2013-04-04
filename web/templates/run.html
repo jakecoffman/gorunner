@@ -18,11 +18,12 @@
 <ul>
 	<li>Job: {{.Job.Name}}</li>
 	<li>Started: {{.Start}}</li>
-	{{ if .End.IsZero() }}
+	{{ if .End }}
 	<li>This job is still running</li>
 	{{ else }}
 	<li>Ended: {{.End}}</li>
 	{{ end }}
+	<li>Output: <pre>{{.Output}}</pre></li>
 </ul>
 {{ end }}
 

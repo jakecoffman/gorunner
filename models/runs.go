@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"os/exec"
 )
 
 type Run struct {
@@ -13,6 +14,7 @@ type Run struct {
 	Tasks []Task
 	Start time.Time
 	End   time.Time
+	Output string
 }
 
 type RunList struct {
@@ -32,7 +34,8 @@ func (j RunList) Get(name string) (Run, error) {
 	return Run{}, errors.New(fmt.Sprintf("Run '%s' not found", name))
 }
 
-func (j *RunList) Append(run Run) error {
+func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
+	run := Run{UUID:UUID, Job:job, Tasks:tasks, Start:time.Now()}
 	var found bool = false
 	for _, j := range (j.Runs) {
 		if run.UUID == j.UUID {
@@ -42,9 +45,22 @@ func (j *RunList) Append(run Run) error {
 	if found {
 		return errors.New("Run with that name found in list")
 	}
-	run.Start = time.Now()
+	run.execute()
 	j.Runs = append(j.Runs, run)
 	return nil
+}
+
+func (r *Run) execute() {
+	for _, task := range r.Tasks {
+		r.Output += "Task " + task.Name + " started at " + time.Now().String() + "\n"
+		cmd := exec.Command("cmd", "/C", task.Script)
+		out, err := cmd.Output()
+		if err != nil {
+			r.Output += err.Error()
+		}
+		r.Output += string(out) + "\nTask ended at " + time.Now().String()
+	}
+	r.End = time.Now()
 }
 
 func (j *RunList) Delete(name string) error {

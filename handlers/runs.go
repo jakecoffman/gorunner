@@ -48,8 +48,7 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 			}
 			tasks = append(tasks, task)
 		}
-		run := models.Run{UUID: id.String(), Job: job, Tasks: tasks}
-		err = runsList.Append(run)
+		err = runsList.AddRun(id.String(), job, tasks)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
