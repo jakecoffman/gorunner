@@ -5,23 +5,20 @@
 
 {{ define "navigation" }}
 <li class="nav-header">Navigation</li>
-<li class="active"><a href="/jobs">Jobs</a></li>
+<li><a href="/jobs">Jobs</a></li>
 <li><a href="/tasks">Tasks</a></li>
 <li><a href="/runs">Runs</a></li>
-<li class="nav-header">Actions</li>
-<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
-<li><a href="#" id="delete-job">Delete Job</a></li>
 {{ end }}
 
 {{ define "content" }}
 <h1>{{.UUID}}</h1>
 <ul>
 	<li>Job: {{.Job.Name}}</li>
-	<li>Started: {{.Start}}</li>
-	{{ if .End }}
+	<li>Started: {{.Start.Format "2006-01-02 15:04:05"}}</li>
+	{{ if .End.IsZero }}
 	<li>This job is still running</li>
 	{{ else }}
-	<li>Ended: {{.End}}</li>
+	<li>Ended: {{.End.Format "2006-01-02 15:04:05"}}</li>
 	{{ end }}
 	<li>Output: <pre>{{.Output}}</pre></li>
 </ul>

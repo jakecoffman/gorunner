@@ -25,6 +25,18 @@ func (j RunList) GetRuns() []Run {
 	return j.Runs
 }
 
+func (j RunList) Len() int {
+	return len(j.Runs)
+}
+
+func (l RunList) Less(i, j int) bool {
+	return l.Runs[i].Start.Before(l.Runs[j].Start)
+}
+
+func (l RunList) Swap(i, j int) {
+	l.Runs[i], l.Runs[j] = l.Runs[j], l.Runs[i]
+}
+
 func (j RunList) Get(name string) (Run, error) {
 	for _, Run := range (j.Runs) {
 		if Run.UUID == name {

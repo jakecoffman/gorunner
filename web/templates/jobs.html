@@ -43,7 +43,7 @@
 			<td>0</td>
 			{{ end }}
 			<td><span class="label">new</span></td>
-			<td><button class="btn btn-mini go" data-job="{{.Name}}"><i class="icon-play"></i></button></td>
+			<td><button class="btn btn-mini run-job" data-job="{{.Name}}"><i class="icon-play"></i></button></td>
 		</tr>
 		{{ end }}
 		</tbody>
@@ -88,6 +88,24 @@
 		ajax.fail(function(d){
 			alert(d.responseText);
 		});
-	})
+	});
+
+	$('.run-job').click(function(evt){
+		var name = $(this).attr('data-job');
+
+		var ajax = $.ajax({
+			url: "/runs",
+			type: "post",
+			data: {job: name}
+		});
+
+		ajax.done(function(data){
+			location.reload();
+		});
+
+		ajax.fail(function(){
+			alert("failed");
+		})
+	});
 </script>
 {{ end }}

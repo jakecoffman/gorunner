@@ -8,9 +8,18 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"html/template"
 	"net/http"
+	"sort"
 )
 
 const runsFile = "runs.json"
+
+type Reverse struct {
+	sort.Interface
+}
+
+func (r Reverse) Less(i, j int) bool {
+	return r.Interface.Less(j, i)
+}
 
 func Runs(w http.ResponseWriter, r *http.Request) {
 	var runsList models.RunList
@@ -21,6 +30,8 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 			"web/templates/_base.html",
 			"web/templates/runs.html",
 		))
+
+		sort.Sort(Reverse{runsList})
 
 		if err := runsTemplate.Execute(w, runsList); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

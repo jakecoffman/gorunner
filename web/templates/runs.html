@@ -8,9 +8,6 @@
 <li><a href="/jobs">Jobs</a></li>
 <li><a href="/tasks">Tasks</a></li>
 <li class="active"><a href="/runs">Runs</a></li>
-<li class="nav-header">Actions</li>
-<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
-<li><a href="#" id="delete-job">Delete Job</a></li>
 {{ end }}
 
 {{ define "content" }}
@@ -29,8 +26,12 @@
 	<tr>
 		<td><a href="/runs/{{ .UUID }}">{{ .UUID }}</a></td>
 		<td><a href="/jobs/{{.Job.Name}}">{{ .Job.Name }}</a></td>
-		<td>{{.Start}}</td>
-		<td>{{.End}}</td>
+		<td>{{.Start.Format "2006-01-02 15:04:05" }}</td>
+		{{ if .End.IsZero }}
+		<td></td>
+		{{ else }}
+		<td>{{.End.Format "2006-01-02 15:04:05" }}</td>
+		{{ end }}
 	</tr>
 	{{ end }}
 	</tbody>
