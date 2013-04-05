@@ -16,6 +16,7 @@ type Run struct {
 	Start  time.Time
 	End    time.Time
 	Output string
+	Status string
 }
 
 type RunList struct {
@@ -65,7 +66,7 @@ func (j RunList) Get(name string) (*Run, error) {
 }
 
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
-	run := Run{UUID:UUID, Job:job, Tasks:tasks, Start:time.Now()}
+	run := Run{UUID:UUID, Job:job, Tasks:tasks, Start:time.Now(), Status:"New"}
 	var found bool = false
 	for _, j := range (j.runs) {
 		if run.UUID == j.UUID {
@@ -86,16 +87,20 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 }
 
 func (l *RunList) execute(r *Run) {
+	r.Status = "Running"
 	for _, task := range r.Tasks {
 		r.Output += "Task " + task.Name + " started at " + time.Now().String() + "\n"
+		l.Update(*r)
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
 		if err != nil {
 			r.Output += err.Error()
 		}
 		r.Output += string(out) + "\nTask ended at " + time.Now().String()
+		l.Update(*r)
 	}
 	r.End = time.Now()
+	r.Status = "Done"
 	l.Update(*r)
 }
 

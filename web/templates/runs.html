@@ -17,6 +17,7 @@
 	<tr>
 		<th>UUID</th>
 		<th>Job</th>
+		<th>Status</th>
 		<th>Start</th>
 		<th>End</th>
 	</tr>
@@ -26,6 +27,11 @@
 	<tr>
 		<td><a href="/runs/{{ .UUID }}">{{ .UUID }}</a></td>
 		<td><a href="/jobs/{{.Job.Name}}">{{ .Job.Name }}</a></td>
+		{{ if .Status }}
+		<td><span class="label">{{.Status}}</span></td>
+		{{ else }}
+		<td><span class="label label-inverse">Unknown</span></td>
+		{{ end }}
 		<td>{{.Start.Format "2006-01-02 15:04:05" }}</td>
 		{{ if .End.IsZero }}
 		<td></td>
