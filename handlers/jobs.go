@@ -3,7 +3,6 @@ package handlers
 import (
 	"html/template"
 	"net/http"
-	"github.com/jakecoffman/gorunner/db"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/gorilla/mux"
 	"fmt"
@@ -12,8 +11,7 @@ import (
 const jobsFile = "jobs.json"
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
-	var jobList models.JobList
-	db.Load(&jobList, jobsFile)
+	jobList := models.GetJobList()
 
 	if r.Method == "GET" {
 		var jobsTemplate = template.Must(template.ParseFiles(
@@ -31,7 +29,6 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		db.Save(&jobList, jobsFile)
 	} else {
 		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
 		return
@@ -39,8 +36,8 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 }
 
 func Job(w http.ResponseWriter, r *http.Request) {
-	var jobList models.JobList
-	db.Load(&jobList, jobsFile)
+	jobList := models.GetJobList()
+
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
 	if err != nil {
@@ -63,15 +60,12 @@ func Job(w http.ResponseWriter, r *http.Request) {
 		job.Tasks = append(job.Tasks, task)
 		jobList.Delete(job.Name)
 		jobList.Append(job)
-		db.Save(&jobList, jobsFile)
 	} else if r.Method == "DELETE" {
 		err := jobList.Delete(job.Name)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		db.Save(&jobList, jobsFile)
-
 	} else {
 		http.Error(w, "", http.StatusMethodNotAllowed)
 	}

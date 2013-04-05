@@ -6,50 +6,68 @@ import (
 	"fmt"
 	"time"
 	"os/exec"
+	"sync"
 )
 
 type Run struct {
-	UUID  string
-	Job   Job
-	Tasks []Task
-	Start time.Time
-	End   time.Time
+	UUID   string
+	Job    Job
+	Tasks  []Task
+	Start  time.Time
+	End    time.Time
 	Output string
 }
 
 type RunList struct {
-	Runs []Run
+	runs []Run
+	lock sync.RWMutex
 }
 
-func (j RunList) GetRuns() []Run {
-	return j.Runs
+func GetRunList() *RunList {
+	return &runList
+}
+
+func (j RunList) GetList() []Run {
+	return j.runs
 }
 
 func (j RunList) Len() int {
-	return len(j.Runs)
+	j.lock.RLock()
+	defer j.lock.RUnlock()
+
+	return len(j.runs)
 }
 
 func (l RunList) Less(i, j int) bool {
-	return l.Runs[i].Start.Before(l.Runs[j].Start)
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	return l.runs[i].Start.Before(l.runs[j].Start)
 }
 
 func (l RunList) Swap(i, j int) {
-	l.Runs[i], l.Runs[j] = l.Runs[j], l.Runs[i]
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	l.runs[i], l.runs[j] = l.runs[j], l.runs[i]
 }
 
-func (j RunList) Get(name string) (Run, error) {
-	for _, Run := range (j.Runs) {
+func (j RunList) Get(name string) (*Run, error) {
+	j.lock.RLock()
+	defer j.lock.RUnlock()
+
+	for _, Run := range (j.runs) {
 		if Run.UUID == name {
-			return Run, nil
+			return &Run, nil
 		}
 	}
-	return Run{}, errors.New(fmt.Sprintf("Run '%s' not found", name))
+	return &Run{}, errors.New(fmt.Sprintf("Run '%s' not found", name))
 }
 
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	run := Run{UUID:UUID, Job:job, Tasks:tasks, Start:time.Now()}
 	var found bool = false
-	for _, j := range (j.Runs) {
+	for _, j := range (j.runs) {
 		if run.UUID == j.UUID {
 			found = true
 		}
@@ -57,12 +75,17 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	if found {
 		return errors.New("Run with that name found in list")
 	}
-	run.execute()
-	j.Runs = append(j.Runs, run)
+	j.lock.Lock()
+	defer j.lock.Unlock()
+
+	j.runs = append(j.runs, run)
+	go j.execute(&run)
+
+	Save(&runList, runsFile)
 	return nil
 }
 
-func (r *Run) execute() {
+func (l *RunList) execute(r *Run) {
 	for _, task := range r.Tasks {
 		r.Output += "Task " + task.Name + " started at " + time.Now().String() + "\n"
 		cmd := exec.Command("cmd", "/C", task.Script)
@@ -73,13 +96,39 @@ func (r *Run) execute() {
 		r.Output += string(out) + "\nTask ended at " + time.Now().String()
 	}
 	r.End = time.Now()
+	l.Update(*r)
+}
+
+func (j *RunList) Update(run Run) error {
+	j.lock.Lock()
+	defer j.lock.Unlock()
+
+	var found bool
+	var position int
+	for i, r := range j.runs {
+		if r.UUID == run.UUID {
+			position = i
+			found = true
+		}
+	}
+	if !found {
+		println("Error, can't find run " + run.UUID)
+		return errors.New("Can't find run")
+	}
+
+	j.runs[position] = run
+	Save(&runList, runsFile)
+	return nil
 }
 
 func (j *RunList) Delete(name string) error {
+	j.lock.Lock()
+	defer j.lock.Unlock()
+
 	var found bool = false
 	var i int
-	var Run Run
-	for i, Run = range (j.Runs) {
+	var Run *Run
+	for i, *Run = range (j.runs) {
 		if Run.UUID == name {
 			found = true
 			break
@@ -88,20 +137,21 @@ func (j *RunList) Delete(name string) error {
 	if !found {
 		return errors.New("Run not found for deletion")
 	}
-	j.Runs = j.Runs[:i + copy(j.Runs[i:], j.Runs[i + 1:])]
+	j.runs = j.runs[:i + copy(j.runs[i:], j.runs[i + 1:])]
+	Save(&runList, runsFile)
 	return nil
 }
 
-func (j RunList) Dumps() string {
-	bytes, err := json.Marshal(j.Runs)
+func (j RunList) dumps() string {
+	bytes, err := json.Marshal(j.runs)
 	if err != nil {
 		panic(err)
 	}
 	return string(bytes)
 }
 
-func (j *RunList) Loads(s string) {
-	err := json.Unmarshal([]byte(s), &j.Runs)
+func (j *RunList) loads(s string) {
+	err := json.Unmarshal([]byte(s), &j.runs)
 	if err != nil {
 		panic(err)
 	}

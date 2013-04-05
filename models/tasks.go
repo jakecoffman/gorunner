@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 )
 
 type Task struct {
@@ -13,13 +14,21 @@ type Task struct {
 
 type TaskList struct {
 	tasks []Task
+	lock sync.RWMutex
 }
 
-func (t TaskList) GetTasks() []Task{
+func GetTaskList() *TaskList {
+	return &taskList
+}
+
+func (t TaskList) GetList() []Task {
 	return t.tasks
 }
 
 func (t TaskList) Get(name string) (Task,error) {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+
 	for _, task := range(t.tasks){
 		if task.Name == name{
 			return task, nil
@@ -29,10 +38,17 @@ func (t TaskList) Get(name string) (Task,error) {
 }
 
 func (t *TaskList) Append(task Task){
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
 	t.tasks = append(t.tasks, task)
+	Save(&taskList, tasksFile)
 }
 
 func (tl *TaskList) Delete(name string) error {
+	tl.lock.Lock()
+	defer tl.lock.Unlock()
+
 	var i int
 	var t Task
 	var found bool = false
@@ -46,10 +62,18 @@ func (tl *TaskList) Delete(name string) error {
 		return errors.New("Could not find task to update")
 	}
 	tl.tasks = tl.tasks[:i+copy(tl.tasks[i:], tl.tasks[i+1:])]
+	Save(&taskList, tasksFile)
 	return nil
 }
 
-func (t TaskList) Dumps() string {
+func (t TaskList) Json() string {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+
+	return t.dumps()
+}
+
+func (t TaskList) dumps() string {
 	bytes, err := json.Marshal(t.tasks)
 	if err != nil {
 		panic(err)
@@ -57,7 +81,7 @@ func (t TaskList) Dumps() string {
 	return string(bytes)
 }
 
-func (t *TaskList) Loads(s string) {
+func (t *TaskList) loads(s string) {
 	err := json.Unmarshal([]byte(s), &t.tasks)
 	if err != nil {
 		panic(err)

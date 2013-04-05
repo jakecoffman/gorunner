@@ -3,15 +3,12 @@ package handlers
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/jakecoffman/gorunner/db"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/nu7hatch/gouuid"
 	"html/template"
 	"net/http"
 	"sort"
 )
-
-const runsFile = "runs.json"
 
 type Reverse struct {
 	sort.Interface
@@ -22,8 +19,7 @@ func (r Reverse) Less(i, j int) bool {
 }
 
 func Runs(w http.ResponseWriter, r *http.Request) {
-	var runsList models.RunList
-	db.Load(&runsList, runsFile)
+	runsList := models.GetRunList()
 
 	if r.Method == "GET" {
 		var runsTemplate = template.Must(template.ParseFiles(
@@ -37,10 +33,8 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "POST" {
-		var jobsList models.JobList
-		db.Load(&jobsList, jobsFile)
-		var tasksList models.TaskList
-		db.Load(&tasksList, tasksFile)
+		jobsList := models.GetJobList()
+		tasksList := models.GetTaskList()
 
 		jobName := r.FormValue("job")
 		job, err := jobsList.Get(jobName)
@@ -63,7 +57,6 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		db.Save(&runsList, runsFile)
 	} else {
 		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
 		return
@@ -71,8 +64,8 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 }
 
 func Run(w http.ResponseWriter, r *http.Request) {
-	var runList models.RunList
-	db.Load(&runList, runsFile)
+	runList := models.GetRunList()
+
 	vars := mux.Vars(r)
 	run, err := runList.Get(vars["run"])
 	if err != nil {

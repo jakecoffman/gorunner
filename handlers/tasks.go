@@ -3,17 +3,13 @@ package handlers
 import (
 	"html/template"
 	"net/http"
-	"github.com/jakecoffman/gorunner/db"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/gorilla/mux"
 	"strings"
 )
 
-const tasksFile = "tasks.json"
-
 func Tasks(w http.ResponseWriter, r *http.Request) {
-	var taskList models.TaskList
-	db.Load(&taskList, tasksFile)
+	taskList := models.GetTaskList()
 
 	var tasksTemplate = template.Must(template.ParseFiles(
 		"web/templates/_base.html",
@@ -27,12 +23,11 @@ func Tasks(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			w.Header().Set("Content-Type", "text/plain")
-			w.Write([]byte(taskList.Dumps()))
+			w.Write([]byte(taskList.Json()))
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
 		taskList.Append(models.Task{name, ""})
-		db.Save(&taskList, tasksFile)
 		if err := tasksTemplate.Execute(w, taskList); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -42,8 +37,8 @@ func Tasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func Task(w http.ResponseWriter, r *http.Request) {
-	var taskList models.TaskList
-	db.Load(&taskList, tasksFile)
+	taskList := models.GetTaskList()
+
 	vars := mux.Vars(r)
 	task, err := taskList.Get(vars["task"])
 	if err != nil {
@@ -65,13 +60,9 @@ func Task(w http.ResponseWriter, r *http.Request) {
 		task.Script = script
 		taskList.Delete(task.Name)
 		taskList.Append(task)
-		db.Save(&taskList, tasksFile)
 	} else if r.Method == "DELETE" {
 		taskList.Delete(task.Name)
-		db.Save(&taskList, tasksFile)
 	} else {
 		http.Error(w, "Unknown method type" , http.StatusMethodNotAllowed)
 	}
-
-
 }

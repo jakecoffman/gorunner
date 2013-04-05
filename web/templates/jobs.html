@@ -15,7 +15,7 @@
 {{ define "content" }}
 
 <h1>Jobs</h1>
-{{ if not .GetJobs }}
+{{ if not .GetList }}
 	<p>There are not any jobs yet. You can <a href="#add-job" role="button" data-toggle="modal">add one now</a>!</p>
 {{ else }}
 	<table class="table">
@@ -34,7 +34,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		{{ range .GetJobs }}
+		{{ range .GetList }}
 		<tr>
 			<td><a href="/jobs/{{ .Name }}">{{ .Name }}</a></td>
 			{{ if .Tasks }}

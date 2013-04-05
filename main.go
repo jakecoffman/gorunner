@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/handlers"
 	"github.com/jakecoffman/gorunner/executor"
+	"github.com/jakecoffman/gorunner/models"
 	"net/http"
 	"os"
 	"net"
@@ -41,6 +42,8 @@ func main() {
 	go func() {
 		// run stuff outside of the main loop
 	}()
+
+	models.Initialize()
 
 	go func() {
 		for {

@@ -22,7 +22,7 @@
 	</tr>
 	</thead>
 	<tbody>
-	{{ range .GetRuns }}
+	{{ range .GetList }}
 	<tr>
 		<td><a href="/runs/{{ .UUID }}">{{ .UUID }}</a></td>
 		<td><a href="/jobs/{{.Job.Name}}">{{ .Job.Name }}</a></td>
