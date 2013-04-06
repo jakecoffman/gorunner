@@ -45,7 +45,7 @@
 		<div class="span3">
 			<ul class="nav nav-list" id="side-nav">
 				{{template "navigation" .}}
-				<li class="nav-header">Most Recent Runs</li>
+				<li class="nav-header" id="recent">Most Recent Runs</li>
 				<li id="spinner"><img src="/static/img/spinner.gif"></li>
 			</ul>
 		</div>
@@ -61,21 +61,26 @@
 <script src="/static/bootstrap/js/bootstrap.min.js"></script>
 {{ template "scripts" .}}
 <script type="text/javascript">
-	var recent = $.ajax({
-		url: "/runs",
-		contentType: "json"
-	});
-
-	recent.done(function(data){
-		console.log(data);
-		var nav = $('#side-nav');
-		$.each(data, function(index, run){
-			var done = run.End === "0001-01-01T00:00:00Z" ? "Running" : "Done";
-			nav.append("<li><a href='/runs/"+ run.UUID +"'>"+ run.Job.Name +"<span class='pull-right'><span class='label'>"+ done +"</span></span></a></li>")
-			return index <= 10;
+	var doRecentRuns = function(){
+		var recent = $.ajax({
+			url: "/runs",
+			contentType: "json"
 		});
-		$('#spinner').hide();
-	})
+
+		recent.done(function(data){
+			var nav = $('#side-nav');
+			nav.find('li.history').remove();
+			$.each(data, function(index, run){
+				var done = run.End === "0001-01-01T00:00:00Z" ? "Running" : "Done";
+				nav.append("<li class='history'><a href='/runs/"+ run.UUID +"'>"+ run.Job.Name +"<span class='pull-right'><span class='label'>"+ done +"</span></span></a></li>")
+				return index <= 10;
+			});
+			$('#spinner').hide();
+		});
+		window.setTimeout(doRecentRuns, 5000);
+	};
+
+	doRecentRuns();
 </script>
 </body>
 </html>
