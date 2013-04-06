@@ -9,14 +9,22 @@ import (
 	"sync"
 )
 
+type Result struct {
+	Start   time.Time
+	End     time.Time
+	Task    Task
+	Output  string
+	Error   error
+}
+
 type Run struct {
-	UUID   string
-	Job    Job
-	Tasks  []Task
-	Start  time.Time
-	End    time.Time
-	Output string
-	Status string
+	UUID    string
+	Job     Job
+	Tasks   []Task
+	Start   time.Time
+	End     time.Time
+	Results []Result
+	Status  string
 }
 
 type RunList struct {
@@ -89,14 +97,14 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 func (l *RunList) execute(r *Run) {
 	r.Status = "Running"
 	for _, task := range r.Tasks {
-		r.Output += "Task " + task.Name + " started at " + time.Now().String() + "\n"
+		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
+		result := &r.Results[len(r.Results) - 1]
 		l.Update(*r)
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
-		if err != nil {
-			r.Output += err.Error()
-		}
-		r.Output += string(out) + "\nTask ended at " + time.Now().String()
+		result.Error = err
+		result.Output = string(out)
+		result.End = time.Now()
 		l.Update(*r)
 	}
 	r.End = time.Now()
