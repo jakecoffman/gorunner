@@ -14,7 +14,7 @@ type Result struct {
 	End     time.Time
 	Task    Task
 	Output  string
-	Error   error
+	Error   string
 }
 
 type Run struct {
@@ -102,9 +102,13 @@ func (l *RunList) execute(r *Run) {
 		l.Update(*r)
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
-		result.Error = err
 		result.Output = string(out)
 		result.End = time.Now()
+		if err != nil {
+			result.Error = err.Error()
+			r.Status = "Error"
+			break
+		}
 		l.Update(*r)
 	}
 	r.End = time.Now()
