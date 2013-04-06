@@ -6,9 +6,8 @@ import (
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/gorilla/mux"
 	"fmt"
+	"strconv"
 )
-
-const jobsFile = "jobs.json"
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
@@ -69,6 +68,27 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
+}
 
+func JobTask(w http.ResponseWriter, r *http.Request){
+	jobList := models.GetJobList()
 
+	vars := mux.Vars(r)
+	job, err := jobList.Get(vars["job"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+
+	taskPosition, err := strconv.Atoi(vars["task"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	if r.Method == "DELETE" {
+		fmt.Println(job.Tasks)
+		job.Delete(taskPosition)
+		fmt.Println(job.Tasks)
+		jobList.Update(job)
+	}
 }

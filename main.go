@@ -29,6 +29,7 @@ func main() {
 	r.HandleFunc("/", handlers.Jobs)
 	r.HandleFunc("/jobs", handlers.Jobs)
 	r.HandleFunc("/jobs/{job}", handlers.Job)
+	r.HandleFunc("/jobs/{job}/{task}", handlers.JobTask)
 
 	r.HandleFunc("/tasks", handlers.Tasks)
 	r.HandleFunc("/tasks/{task}", handlers.Task)

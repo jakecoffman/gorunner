@@ -32,8 +32,8 @@
 	{{ if .Tasks }}
 		<p>The following Tasks are defined for this job:</p>
 		<ul id="sortable">
-		{{ range .Tasks }}
-			<li class="ui-state-default">{{ . }}<a href="#" class="remove" data-task="{{.}}"> <i class="icon-remove pull-right"></i></a> </li>
+		{{ range $index, $_ := .Tasks }}
+			<li class="ui-state-default">{{ . }}<a href="#" class="remove" data-task="{{.}}" data-position="{{$index}}"> <i class="icon-remove pull-right"></i></a> </li>
 		{{ end }}
 		</ul>
 	{{ else }}
@@ -97,12 +97,13 @@
 	});
 
 	$('.remove').click(function(evt){
-		var task = $(this).attr('data-task');
-		if(!confirm("Really delete " + task + "?")){
+		var position = $(this).attr('data-position');
+		var name = $(this).attr('data-task');
+		if(!confirm("Really delete " + name + "?")){
 			return;
 		}
 		var ajax = $.ajax({
-			url: "/jobs/{{.Name}}/" + task,
+			url: "/jobs/{{.Name}}/" + position,
 			type: "delete"
 		});
 

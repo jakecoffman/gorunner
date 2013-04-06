@@ -12,6 +12,12 @@ type Job struct {
 	Tasks []string
 }
 
+func (j *Job) Delete(taskPosition int) error {
+	i := taskPosition
+	j.Tasks = j.Tasks[:i+copy(j.Tasks[i:], j.Tasks[i+1:])]
+	return nil
+}
+
 type JobList struct {
 	jobs []Job
 	lock sync.RWMutex
@@ -41,18 +47,42 @@ func (j *JobList) Append(job Job) error {
 	j.lock.Lock()
 	defer j.lock.Unlock()
 
-	var found bool = false
-	for _, j := range(j.jobs) {
-		if job.Name == j.Name {
-			found = true
-		}
-	}
-	if found {
+	_, err := j.getPosition(job.Name)
+	if err == nil {
 		return errors.New("Job with that name found in list")
 	}
 	j.jobs = append(j.jobs, job)
 	Save(&jobList, jobsFile)
 	return nil
+}
+
+func (j *JobList) Update(job Job) error {
+	j.lock.Lock()
+	defer j.lock.Unlock()
+
+	position, err := j.getPosition(job.Name)
+	if err != nil {
+		return err
+	}
+
+	j.jobs[position] = job
+	Save(&jobList, jobsFile)
+	return nil
+}
+
+func (j JobList) getPosition(jobName string) (int,error) {
+	var found bool
+	var position int
+	for i, j := range j.jobs {
+		if jobName == j.Name {
+			position = i
+			found = true
+		}
+	}
+	if !found {
+		return -1, errors.New("Couldn't find " + jobName)
+	}
+	return position, nil
 }
 
 func (j *JobList) Delete(name string) error {
