@@ -76,6 +76,13 @@ func (j *JobList) Delete(name string) error {
 	return nil
 }
 
+func (j JobList) Json() string {
+	j.lock.RLock()
+	defer j.lock.RUnlock()
+
+	return j.dumps()
+}
+
 func (j JobList) dumps() string {
 	bytes, err := json.Marshal(j.jobs)
 	if err != nil {

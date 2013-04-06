@@ -159,6 +159,13 @@ func (j *RunList) Delete(name string) error {
 	return nil
 }
 
+func (j RunList) Json() string {
+	j.lock.RLock()
+	defer j.lock.RUnlock()
+
+	return j.dumps()
+}
+
 func (j RunList) dumps() string {
 	bytes, err := json.Marshal(j.runs)
 	if err != nil {

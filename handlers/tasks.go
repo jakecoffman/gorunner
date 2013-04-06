@@ -22,7 +22,7 @@ func Tasks(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
-			w.Header().Set("Content-Type", "text/plain")
+			w.Header().Set("Content-Type", "application/json")
 			w.Write([]byte(taskList.Json()))
 		}
 	} else if r.Method == "POST" {

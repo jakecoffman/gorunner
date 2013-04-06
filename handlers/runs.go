@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"net/http"
 	"sort"
+	"strings"
 )
 
 type Reverse struct {
@@ -22,15 +23,21 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 	runsList := models.GetRunList()
 
 	if r.Method == "GET" {
-		var runsTemplate = template.Must(template.ParseFiles(
-			"web/templates/_base.html",
-			"web/templates/runs.html",
-		))
+		if strings.Contains(r.Header.Get("Accept"), "text/html") {
+			var runsTemplate = template.Must(template.ParseFiles(
+				"web/templates/_base.html",
+				"web/templates/runs.html",
+			))
 
-		sort.Sort(Reverse{runsList})
+			sort.Sort(Reverse{runsList})
 
-		if err := runsTemplate.Execute(w, runsList); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err := runsTemplate.Execute(w, runsList); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			sort.Sort(Reverse{runsList})
+			w.Write([]byte(runsList.Json()))
 		}
 	} else if r.Method == "POST" {
 		jobsList := models.GetJobList()
