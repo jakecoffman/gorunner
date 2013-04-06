@@ -70,6 +70,11 @@
 		recent.done(function(data){
 			var nav = $('#side-nav');
 			nav.find('li.history').remove();
+
+            if(data.length == 0){
+                nav.append("<li class='history'><a href='#'>No runs found</a></li>")
+            }
+
 			$.each(data, function(index, run){
 				var done = run.End === "0001-01-01T00:00:00Z" ? "Running" : "Done";
 				nav.append("<li class='history'><a href='/runs/"+ run.UUID +"'>"+ run.Job.Name +"<span class='pull-right'><span class='label'>"+ done +"</span></span></a></li>")

@@ -1,1 +1,7 @@
 *.json
+
+/.idea
+
+/*.iml
+
+/*.exe
