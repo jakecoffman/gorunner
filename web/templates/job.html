@@ -49,7 +49,7 @@
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
 		<h3 id="myModalLabel">Bind Task</h3>
 	</div>
-	<div class="modal-body">
+	<div class="modal-body" id="bind-task-body">
 		<p>Select a task from the list to bind to this Job.</p>
 		<form name="bind-task" action="/tasks/{{ .Name }}" method="post">
 			<label for="task">Available Tasks</label>
@@ -73,14 +73,16 @@
 		dataType: "json"
 	});
 
-	ajax.done(function (data, status, jqxhr){
-		var tasks = JSON.parse(jqxhr.responseText);
-		var option = $('<option>');
+	ajax.done(function (data){
+        if(data.length == 0){
+            $('#bind-task-body').html('<p>No tasks found. <a href="/tasks">Go create one!</a></p>')
+        }
+        var option = $('<option>');
 		var options = [];
-		$.each(tasks, function(i, v){
+		$.each(data, function(i, v){
 			options.push(option.clone().attr('value', v.Name).text(v.Name))
 		});
-		$('#task').append(options);
+        $('#task').append(options);
 	});
 
 	$('#bind').click(function(evt){
