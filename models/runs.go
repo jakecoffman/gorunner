@@ -104,12 +104,26 @@ func (l *RunList) execute(r *Run) {
 			r.Status = "Failed"
 			r.End = time.Now()
 			l.Update(*r)
+			jobList := GetJobList()
+			job, err := jobList.Get(r.Job.Name)
+			if err != nil{
+				return
+			}
+			job.Status = "Failing"
+			jobList.Update(job)
 			return
 		}
 		l.Update(*r)
 	}
 	r.End = time.Now()
 	r.Status = "Done"
+	jobList := GetJobList()
+	job, err := jobList.Get(r.Job.Name)
+	if err != nil {
+		return
+	}
+	job.Status = "Ok"
+	jobList.Update(job)
 	l.Update(*r)
 }
 

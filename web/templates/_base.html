@@ -81,13 +81,13 @@
 				var done = '';
 				switch(run.Status){
 					case "Failed":
-						done = "<span class='pull-right label label-warning'>Failed</span>";
+						done = "<span class='pull-right label label-important'>Failed</span>";
 						break;
 					case "Running":
 						done = "<span class='pull-right label label-inverse'>Running</span>";
 						break;
 					case "Done":
-						done = "<span class='pull-right label label-success'>Done</span>";
+						done = "<span class='pull-right label label-info'>Done</span>";
 						break;
 					default:
 						done = "<span class='pull-right label label-important'>"+run.Status+"</span>";

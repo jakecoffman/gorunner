@@ -1,8 +1,9 @@
 package models
 
 type Job struct {
-	Name  string
-	Tasks []string
+	Name   string
+	Tasks  []string
+	Status string
 }
 
 func (j *Job) Append(task string) {
@@ -11,6 +12,6 @@ func (j *Job) Append(task string) {
 
 func (j *Job) Delete(taskPosition int) error {
 	i := taskPosition
-	j.Tasks = j.Tasks[:i+copy(j.Tasks[i:], j.Tasks[i+1:])]
+	j.Tasks = j.Tasks[:i + copy(j.Tasks[i:], j.Tasks[i + 1:])]
 	return nil
 }

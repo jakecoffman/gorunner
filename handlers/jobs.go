@@ -25,7 +25,7 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		err := jobList.Append(models.Job{Name:name})
+		err := jobList.Append(models.Job{Name:name,Status:"New"})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

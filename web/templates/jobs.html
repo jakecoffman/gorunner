@@ -35,11 +35,19 @@
 		<tr>
 			<td><a href="/jobs/{{ .Name }}">{{ .Name }}</a></td>
 			{{ if .Tasks }}
-			<td>{{ .Tasks | len }}</td>
+			<td><span class="badge badge-inverse">{{ .Tasks | len }}</span></td>
 			{{ else }}
-			<td>0</td>
+			<td><span class="badge badge-inverse">0</span></td>
 			{{ end }}
-			<td><span class="label">new</span></td>
+			{{ if any .Status "Ok"}}
+			<td><span class="label label-info"><i class="icon-thumbs-up icon-white"></i> {{.Status}}</span></td>
+			{{ end }}
+			{{ if any .Status "New" }}
+			<td><span class="label label"><i class="icon-star-empty icon-white"></i> {{.Status}}</span></td>
+			{{ end }}
+			{{ if any .Status "Failing" }}
+			<td><span class="label label label-important"><i class="icon-thumbs-down icon-white"></i> {{.Status}}</span></td>
+			{{ end }}
 			<td><button class="btn btn-mini run-job" data-job="{{.Name}}"><i class="icon-play"></i></button></td>
 		</tr>
 		{{ end }}
