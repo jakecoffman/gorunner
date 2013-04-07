@@ -23,7 +23,7 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		err := jobList.Append(models.Job{name, []string{}})
+		err := jobList.Append(models.Job{Name:name})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -56,7 +56,7 @@ func Job(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.Method == "POST" {
 		task := r.FormValue("task")
-		job.Tasks = append(job.Tasks, task)
+		job.Append(task)
 		jobList.Delete(job.Name)
 		jobList.Append(job)
 	} else if r.Method == "DELETE" {
@@ -86,9 +86,7 @@ func JobTask(w http.ResponseWriter, r *http.Request){
 	}
 
 	if r.Method == "DELETE" {
-		fmt.Println(job.Tasks)
 		job.Delete(taskPosition)
-		fmt.Println(job.Tasks)
 		jobList.Update(job)
 	}
 }
