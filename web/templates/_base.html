@@ -75,9 +75,29 @@
                 nav.append("<li class='history'><a href='#'>No runs found</a></li>")
             }
 
+			var thisJob = $("h1").text();
+
 			$.each(data, function(index, run){
-				var done = run.End === "0001-01-01T00:00:00Z" ? "Running" : "Done";
-				nav.append("<li class='history'><a href='/runs/"+ run.UUID +"'>"+ run.Job.Name +"<span class='pull-right'><span class='label'>"+ done +"</span></span></a></li>")
+				var done = '';
+				switch(run.Status){
+					case "Failed":
+						done = "<span class='pull-right label label-warning'>Failed</span>";
+						break;
+					case "Running":
+						done = "<span class='pull-right label label-inverse'>Running</span>";
+						break;
+					case "Done":
+						done = "<span class='pull-right label label-success'>Done</span>";
+						break;
+					default:
+						done = "<span class='pull-right label label-important'>"+run.Status+"</span>";
+						break;
+				}
+				if(thisJob === run.UUID){
+					nav.append("<li class='history active'><a href='/runs/"+ run.UUID +"'>"+ run.Job.Name + done +"</a></li>")
+				} else {
+					nav.append("<li class='history'><a href='/runs/"+ run.UUID +"'>"+ run.Job.Name + done +"</a></li>")
+				}
 				return index <= 10;
 			});
 			$('#spinner').hide();

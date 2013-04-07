@@ -85,7 +85,6 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 
 	j.runs = append(j.runs, run)
 	go j.execute(&run)
-
 	Save(&runList, runsFile)
 	return nil
 }
@@ -102,8 +101,10 @@ func (l *RunList) execute(r *Run) {
 		result.End = time.Now()
 		if err != nil {
 			result.Error = err.Error()
-			r.Status = "Error"
-			break
+			r.Status = "Failed"
+			r.End = time.Now()
+			l.Update(*r)
+			return
 		}
 		l.Update(*r)
 	}
