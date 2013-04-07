@@ -12,20 +12,15 @@ const (
 )
 
 var (
-	initialized bool
 	jobList JobList
 	taskList TaskList
 	runList RunList
 )
 
 func init() {
-	if initialized {
-		panic("Already initialized!")
-	}
 	Load(&jobList, jobsFile)
 	Load(&runList, runsFile)
 	Load(&taskList, tasksFile)
-	initialized = true
 }
 
 type List interface{
