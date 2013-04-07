@@ -18,7 +18,7 @@ var (
 	runList RunList
 )
 
-func Initialize() {
+func init() {
 	if initialized {
 		panic("Already initialized!")
 	}
