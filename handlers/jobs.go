@@ -60,8 +60,7 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		task := r.FormValue("task")
 		job.Append(task)
-		jobList.Delete(job.Name)
-		jobList.Append(job)
+		jobList.Update(job)
 	} else if r.Method == "DELETE" {
 		err := jobList.Delete(job.Name)
 		if err != nil {

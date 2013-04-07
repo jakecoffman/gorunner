@@ -5,7 +5,7 @@ type Job struct {
 	Tasks []string
 }
 
-func (j Job) Append(task string) {
+func (j *Job) Append(task string) {
 	j.Tasks = append(j.Tasks, task)
 }
 
