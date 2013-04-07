@@ -1,0 +1,20 @@
+{{ define "title" }}{{ .Name }}{{ end }}
+
+{{ define "head" }}
+{{end}}
+
+{{ define "navigation" }}
+{{ template "nav" "Trigger"}}
+<li class="nav-header">Actions</li>
+<li><a href="#" id="delete-trigger">Delete Trigger</a></li>
+{{ end }}
+
+{{ define "content" }}
+<h1>{{ .Name }}</h1>
+{{ end }}
+
+{{ define "bottom" }}
+{{ end }}
+
+{{ define "scripts" }}
+{{ end }}

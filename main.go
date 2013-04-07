@@ -36,6 +36,9 @@ func main() {
 	r.HandleFunc("/runs", handlers.Runs)
 	r.HandleFunc("/runs/{run}", handlers.Run)
 
+	r.HandleFunc("/triggers", handlers.Triggers)
+	r.HandleFunc("/triggers/{trigger}", handlers.Trigger)
+
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
 

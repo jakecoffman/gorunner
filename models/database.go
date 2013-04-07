@@ -9,18 +9,37 @@ const (
 	jobsFile = "jobs.json"
 	runsFile = "runs.json"
 	tasksFile = "tasks.json"
+	triggersFile = "triggers.json"
 )
 
 var (
 	jobList JobList
 	taskList TaskList
 	runList RunList
+	triggerList TriggerList
 )
 
 func init() {
 	Load(&jobList, jobsFile)
 	Load(&runList, runsFile)
 	Load(&taskList, tasksFile)
+	Load(&triggerList, triggersFile)
+}
+
+func GetJobList() *JobList {
+	return &jobList
+}
+
+func GetRunList() *RunList {
+	return &runList
+}
+
+func GetTaskList() *TaskList {
+	return &taskList
+}
+
+func GetTriggerList() *TriggerList {
+	return &triggerList
 }
 
 type List interface{

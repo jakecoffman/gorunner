@@ -17,10 +17,6 @@ type TaskList struct {
 	lock sync.RWMutex
 }
 
-func GetTaskList() *TaskList {
-	return &taskList
-}
-
 func (t TaskList) GetList() []Task {
 	return t.tasks
 }

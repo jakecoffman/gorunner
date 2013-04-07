@@ -32,10 +32,6 @@ type RunList struct {
 	lock sync.RWMutex
 }
 
-func GetRunList() *RunList {
-	return &runList
-}
-
 func (j RunList) GetList() []Run {
 	return j.runs
 }

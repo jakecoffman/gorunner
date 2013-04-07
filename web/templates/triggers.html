@@ -1,0 +1,73 @@
+{{ define "title" }}Triggers{{ end }}
+
+{{ define "head" }}
+{{end}}
+
+{{ define "navigation" }}
+{{ template "nav" "Triggers"}}
+<li class="nav-header">Actions</li>
+<li><a href="#add-trigger" role="button" data-toggle="modal">Add trigger</a></li>
+{{ end }}
+
+{{ define "content" }}
+
+<h1>Triggers</h1>
+{{ if not .GetList }}
+<p>There are not any triggers yet. You can <a href="#add-trigger" role="button" data-toggle="modal">add one now</a>!</p>
+{{ else }}
+<table class="table">
+	<thead>
+	<tr>
+		<th>Trigger</th>
+	</tr>
+	</thead>
+	<tbody>
+	{{ range .GetList }}
+	<tr>
+		<td><a href="/triggers/{{ .Name }}">{{ .Name }}</a></td>
+	</tr>
+	{{ end }}
+	</tbody>
+</table>
+{{ end }}
+{{ end }}
+
+{{ define "bottom" }}
+<div id="add-trigger" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h3 id="myModalLabel">Add trigger</h3>
+	</div>
+	<div class="modal-body">
+		<form name="add-trigger" action="/triggers" method="post">
+			<label for="name">Name</label>
+			<input type="text" name="name" id="name">
+		</form>
+	</div>
+	<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+		<button class="btn btn-primary" id="add-trigger-submit">Add</button>
+	</div>
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+<script type="text/javascript">
+	$('#add-trigger-submit').click(function(){
+		var name = $('#name').val();
+		var ajax = $.ajax({
+			url: "/triggers",
+			type: "post",
+			data: {name:name}
+		});
+
+		ajax.done(function(evt){
+			window.location = "/triggers/" + name;
+		});
+
+		ajax.fail(function(d){
+			alert(d.responseText);
+		});
+	})
+</script>
+{{ end }}

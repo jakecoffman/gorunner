@@ -12,10 +12,6 @@ type JobList struct {
 	lock sync.RWMutex
 }
 
-func GetJobList() *JobList {
-	return &jobList
-}
-
 func (j JobList) GetList() []Job {
 	return j.jobs
 }
