@@ -7,18 +7,20 @@ import (
 	"github.com/gorilla/mux"
 	"fmt"
 	"strconv"
+	"github.com/jakecoffman/gorunner/utils"
 )
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	if r.Method == "GET" {
-		var jobsTemplate = template.Must(template.ParseFiles(
+		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
 			"web/templates/_base.html",
+			"web/templates/_nav.html",
 			"web/templates/jobs.html",
 		))
 
-		if err := jobsTemplate.Execute(w, jobList); err != nil {
+		if err := t.Execute(w, jobList); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "POST" {
@@ -45,12 +47,13 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		var jobTemplate = template.Must(template.ParseFiles(
+		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
 			"web/templates/_base.html",
+			"web/templates/_nav.html",
 			"web/templates/job.html",
 		))
 
-		if err := jobTemplate.Execute(w, job); err != nil {
+		if err := t.Execute(w, job); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
@@ -70,7 +73,7 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func JobTask(w http.ResponseWriter, r *http.Request){
+func JobTask(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)

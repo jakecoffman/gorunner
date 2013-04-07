@@ -1,0 +1,6 @@
+{{ define "nav"}}
+<li class="nav-header">Navigation</li>
+<li{{ if any "Jobs" . }} class="active"{{end}}><a href="/jobs">Jobs</a></li>
+<li{{ if any "Tasks" . }} class="active"{{end}}><a href="/tasks">Tasks</a></li>
+<li{{ if any "Runs" . }} class="active"{{end}}><a href="/runs">Runs</a></li>
+{{end}}

@@ -17,10 +17,7 @@
 {{end}}
 
 {{ define "navigation" }}
-	<li class="nav-header">Navigation</li>
-	<li><a href="/jobs">Jobs</a></li>
-	<li><a href="/tasks">Tasks</a></li>
-	<li><a href="/runs">Runs</a></li>
+	{{ template "nav" "Job" }}
 	<li class="nav-header">Actions</li>
 	<li><a href="#" id="run-job">Run Job</a></li>
 	<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>

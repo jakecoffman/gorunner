@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"github.com/jakecoffman/gorunner/models"
+	"github.com/jakecoffman/gorunner/utils"
 	"github.com/gorilla/mux"
 	"strings"
 )
@@ -11,14 +12,15 @@ import (
 func Tasks(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
-	var tasksTemplate = template.Must(template.ParseFiles(
-		"web/templates/_base.html",
-		"web/templates/tasks.html",
-	))
-
 	if r.Method == "GET" {
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			if err := tasksTemplate.Execute(w, taskList); err != nil {
+			t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
+				"web/templates/_base.html",
+				"web/templates/_nav.html",
+				"web/templates/tasks.html",
+			))
+
+			if err := t.Execute(w, taskList); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
@@ -28,9 +30,6 @@ func Tasks(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
 		taskList.Append(models.Task{name, ""})
-		if err := tasksTemplate.Execute(w, taskList); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
 	} else {
 		http.Error(w, "Unknown method type" , http.StatusMethodNotAllowed)
 	}
@@ -47,12 +46,13 @@ func Task(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		var taskTemplate = template.Must(template.ParseFiles(
+		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
 			"web/templates/_base.html",
+			"web/templates/_nav.html",
 			"web/templates/task.html",
 		))
 
-		if err := taskTemplate.Execute(w, task); err != nil {
+		if err := t.Execute(w, task); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "PUT" {

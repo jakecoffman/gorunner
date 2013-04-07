@@ -4,10 +4,7 @@
 {{end}}
 
 {{ define "navigation" }}
-	<li class="nav-header">Navigation</li>
-	<li><a href="/jobs">Jobs</a></li>
-	<li class="active"><a href="/tasks">Tasks</a></li>
-	<li><a href="/runs">Runs</a></li>
+{{ template "nav" "Tasks"}}
 	<li class="nav-header">Actions</li>
 	<li><a href="#add-task" role="button" data-toggle="modal">Add task</a></li>
 {{ end }}

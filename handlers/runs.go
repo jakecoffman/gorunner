@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/models"
+	"github.com/jakecoffman/gorunner/utils"
 	"github.com/nu7hatch/gouuid"
 	"html/template"
 	"net/http"
@@ -24,14 +25,15 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			var runsTemplate = template.Must(template.ParseFiles(
+			t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
 				"web/templates/_base.html",
+				"web/templates/_nav.html",
 				"web/templates/runs.html",
 			))
 
 			sort.Sort(Reverse{runsList})
 
-			if err := runsTemplate.Execute(w, runsList); err != nil {
+			if err := t.Execute(w, runsList); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
@@ -81,12 +83,13 @@ func Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		var runTemplate = template.Must(template.ParseFiles(
+		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
 			"web/templates/_base.html",
+			"web/templates/_nav.html",
 			"web/templates/run.html",
 		))
 
-		if err := runTemplate.Execute(w, run); err != nil {
+		if err := t.Execute(w, run); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
