@@ -8,12 +8,13 @@ import (
 )
 
 type Trigger struct {
-	Name  string
+	Name     string
+	Schedule string
 }
 
 type TriggerList struct {
 	triggers []Trigger
-	lock sync.RWMutex
+	lock     sync.RWMutex
 }
 
 func (j TriggerList) GetList() []Trigger {
@@ -40,7 +41,7 @@ func (j *TriggerList) Append(name string) error {
 	if err == nil {
 		return errors.New("Trigger with that name found in list")
 	}
-	j.triggers = append(j.triggers, Trigger{name})
+	j.triggers = append(j.triggers, Trigger{Name:name})
 	Save(&triggerList, triggersFile)
 	return nil
 }
@@ -59,7 +60,7 @@ func (j *TriggerList) Update(trigger Trigger) error {
 	return nil
 }
 
-func (j TriggerList) getPosition(triggerName string) (int,error) {
+func (j TriggerList) getPosition(triggerName string) (int, error) {
 	var found bool
 	var position int
 	for i, j := range j.triggers {
@@ -81,7 +82,7 @@ func (j *TriggerList) Delete(name string) error {
 	var found bool = false
 	var i int
 	var trigger Trigger
-	for i, trigger = range(j.triggers) {
+	for i, trigger = range (j.triggers) {
 		if trigger.Name == name {
 			found = true
 			break
@@ -90,7 +91,7 @@ func (j *TriggerList) Delete(name string) error {
 	if !found {
 		return errors.New("Trigger not found for deletion")
 	}
-	j.triggers = j.triggers[:i+copy(j.triggers[i:], j.triggers[i+1:])]
+	j.triggers = j.triggers[:i + copy(j.triggers[i:], j.triggers[i + 1:])]
 	Save(&triggerList, triggersFile)
 	return nil
 }

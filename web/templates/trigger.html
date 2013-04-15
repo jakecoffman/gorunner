@@ -11,10 +11,46 @@
 
 {{ define "content" }}
 <h1>{{ .Name }}</h1>
+<p>Enter how often this trigger should fire:</p>
+<div class="input-append">
+	<input type="text" name="cron" id="cron" value="{{.Schedule}}"/>
+	<input type="submit" class="btn" id="submit" value="Save"/>
+</div>
 {{ end }}
 
 {{ define "bottom" }}
 {{ end }}
 
 {{ define "scripts" }}
+	<script type="text/javascript">
+		$('#submit').click(function(evt){
+			evt.preventDefault();
+			var ajax = $.ajax({
+				url: "/triggers/{{.Name}}",
+				type: "PUT",
+				data: {cron: $('#cron').val()}
+			});
+
+			ajax.done(function(){
+				location.reload();
+			})
+		});
+
+		$('#delete-trigger').click(function(evt){
+			evt.preventDefault();
+
+			if(!confirm("Really delete {{.Name}}?")){
+				return;
+			}
+
+			var ajax = $.ajax({
+				url: "/triggers/{{.Name}}",
+				type: "DELETE"
+			});
+
+			ajax.done(function(){
+				window.location = "/triggers"
+			})
+		})
+	</script>
 {{ end }}

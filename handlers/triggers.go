@@ -29,7 +29,7 @@ func Triggers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Trigger(w http.ResponseWriter, r *http.Request){
+func Trigger(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	vars := mux.Vars(r)
@@ -39,13 +39,26 @@ func Trigger(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-		"web/templates/_base.html",
-		"web/templates/_nav.html",
-		"web/templates/trigger.html",
-	))
+	if r.Method == "GET" {
+		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
+			"web/templates/_base.html",
+			"web/templates/_nav.html",
+			"web/templates/trigger.html",
+		))
 
-	if err := t.Execute(w, trigger); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := t.Execute(w, trigger); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else if r.Method == "PUT" {
+		trigger.Schedule = r.FormValue("cron")
+		println(trigger.Schedule)
+		err = triggerList.Update(trigger)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else if r.Method == "DELETE" {
+		triggerList.Delete(vars["trigger"])
+	} else {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
