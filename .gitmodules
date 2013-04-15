@@ -1,0 +1,3 @@
+[submodule "web/static/codemirror"]
+	path = web/static/codemirror
+	url = https://github.com/marijnh/CodeMirror.git
