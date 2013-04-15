@@ -13,3 +13,10 @@ Installation instructions
 	$ go run github.com/jakecoffman/gorunner/main.go
 	
 Or, you know, whatever works. 
+
+Screenshots
+===========
+
+![Jobs page](http://www.coffshire.com/static/gorunner/jobs.png "Jobs page")
+
+![Runs page](http://www.coffshire.com/static/gorunner/runs.png "Runs page")
