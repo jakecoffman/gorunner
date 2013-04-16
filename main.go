@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/handlers"
-	"github.com/jakecoffman/gorunner/executor"
 	"net/http"
 	"os"
 	"net"
@@ -58,6 +57,7 @@ func main() {
 	}()
 	defer l.Close()
 
-	<-executor.Kill
+	select{}
+
 	println("Dead")
 }
