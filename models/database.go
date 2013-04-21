@@ -42,17 +42,17 @@ func GetTriggerList() *TriggerList {
 	return &triggerList
 }
 
-type List interface{
+type Serializable interface{
 	dumps() string
 	loads(s string)
 }
 
-func Save(list List, filePath string) {
+func Save(list Serializable, filePath string) {
 	bytes := list.dumps()
 	writeFile([]byte(bytes), filePath)
 }
 
-func Load(list List, filePath string) {
+func Load(list Serializable, filePath string) {
 	bytes := readFile(filePath)
 	list.loads(string(bytes))
 }

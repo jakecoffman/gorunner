@@ -25,7 +25,7 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		err := jobList.Append(models.Job{Name:name,Status:"New"})
+		err := models.Append(jobList, models.Job{Name:name, Status:"New"})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -40,7 +40,8 @@ func Job(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := models.Get(jobList, vars["job"])
+	j := job.(models.Job)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -59,10 +60,10 @@ func Job(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.Method == "POST" {
 		task := r.FormValue("task")
-		job.Append(task)
-		jobList.Update(job)
+		j.Append(task)
+		models.Update(jobList, j)
 	} else if r.Method == "DELETE" {
-		err := jobList.Delete(job.Name)
+		err := models.Delete(jobList, job.ID())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -76,7 +77,8 @@ func JobTask(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := models.Get(jobList, vars["job"])
+	j := job.(models.Job)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
@@ -88,7 +90,7 @@ func JobTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "DELETE" {
-		job.Delete(taskPosition)
-		jobList.Update(job)
+		j.Delete(taskPosition)
+		models.Update(jobList, j)
 	}
 }

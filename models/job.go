@@ -6,6 +6,10 @@ type Job struct {
 	Status string
 }
 
+func (j Job) ID() string {
+	return j.Name
+}
+
 func (j *Job) Append(task string) {
 	j.Tasks = append(j.Tasks, task)
 }

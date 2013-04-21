@@ -2,8 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"sync"
 )
 
@@ -12,95 +10,38 @@ type Trigger struct {
 	Schedule string
 }
 
+func (t Trigger) ID() string {
+	return t.Name
+}
+
 type TriggerList struct {
 	triggers []Trigger
-	lock     sync.RWMutex
+	sync.RWMutex
 }
 
-func (j TriggerList) GetList() []Trigger {
-	return j.triggers
+func (t TriggerList) GetList() []Trigger {
+	return t.triggers
 }
 
-func (j TriggerList) Get(name string) (Trigger, error) {
-	j.lock.RLock()
-	defer j.lock.RUnlock()
-
-	for _, trigger := range (j.triggers) {
-		if trigger.Name == name {
-			return trigger, nil
-		}
+func (t TriggerList) getList() []Elementer {
+	var elements []Elementer
+	for _, trigger := range(t.triggers){
+		elements = append(elements, trigger)
 	}
-	return Trigger{}, errors.New(fmt.Sprintf("Trigger '%s' not found", name))
+	return elements
 }
 
-func (j *TriggerList) Append(name string) error {
-	j.lock.Lock()
-	defer j.lock.Unlock()
-
-	_, err := j.getPosition(name)
-	if err == nil {
-		return errors.New("Trigger with that name found in list")
+func (t *TriggerList) setList(e []Elementer) {
+	var triggers []Trigger
+	for _, trigger := range(e) {
+		t := trigger.(Trigger)
+		triggers = append(triggers, t)
 	}
-	j.triggers = append(j.triggers, Trigger{Name:name})
-	Save(&triggerList, triggersFile)
-	return nil
+	t.triggers = triggers
 }
 
-func (j *TriggerList) Update(trigger Trigger) error {
-	j.lock.Lock()
-	defer j.lock.Unlock()
-
-	position, err := j.getPosition(trigger.Name)
-	if err != nil {
-		return err
-	}
-
-	j.triggers[position] = trigger
-	Save(&triggerList, triggersFile)
-	return nil
-}
-
-func (j TriggerList) getPosition(triggerName string) (int, error) {
-	var found bool
-	var position int
-	for i, j := range j.triggers {
-		if triggerName == j.Name {
-			position = i
-			found = true
-		}
-	}
-	if !found {
-		return -1, errors.New("Couldn't find " + triggerName)
-	}
-	return position, nil
-}
-
-func (j *TriggerList) Delete(name string) error {
-	j.lock.Lock()
-	defer j.lock.Unlock()
-
-	var found bool = false
-	var i int
-	var trigger Trigger
-	for i, trigger = range (j.triggers) {
-		if trigger.Name == name {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return errors.New("Trigger not found for deletion")
-	}
-	j.triggers = j.triggers[:i + copy(j.triggers[i:], j.triggers[i + 1:])]
-	Save(&triggerList, triggersFile)
-	return nil
-}
-
-func (j TriggerList) Json() string {
-	j.lock.RLock()
-	defer j.lock.RUnlock()
-
-	return j.dumps()
+func (t *TriggerList) save() {
+	Save(t, triggersFile)
 }
 
 func (j TriggerList) dumps() string {

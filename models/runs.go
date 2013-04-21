@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 	"os/exec"
 	"sync"
@@ -27,46 +26,59 @@ type Run struct {
 	Status  string
 }
 
+func (r Run) ID() string {
+	return r.UUID
+}
+
 type RunList struct {
 	runs []Run
-	lock sync.RWMutex
+	sync.RWMutex
 }
 
 func (j RunList) GetList() []Run {
 	return j.runs
 }
 
+func (j RunList) getList() []Elementer {
+	var elements []Elementer
+	for _, run := range(j.runs){
+		elements = append(elements, run)
+	}
+	return elements
+}
+
+func (j *RunList) setList(e []Elementer) {
+	var runs []Run
+	for _, run := range(e) {
+		r := run.(Run)
+		runs = append(runs, r)
+	}
+	j.runs = runs
+}
+
+func (j *RunList) save() {
+	Save(j, runsFile)
+}
+
 func (j RunList) Len() int {
-	j.lock.RLock()
-	defer j.lock.RUnlock()
+	j.RLock()
+	defer j.RUnlock()
 
 	return len(j.runs)
 }
 
 func (l RunList) Less(i, j int) bool {
-	l.lock.RLock()
-	defer l.lock.RUnlock()
+	l.RLock()
+	defer l.RUnlock()
 
 	return l.runs[i].Start.Before(l.runs[j].Start)
 }
 
 func (l RunList) Swap(i, j int) {
-	l.lock.RLock()
-	defer l.lock.RUnlock()
+	l.RLock()
+	defer l.RUnlock()
 
 	l.runs[i], l.runs[j] = l.runs[j], l.runs[i]
-}
-
-func (j RunList) Get(name string) (*Run, error) {
-	j.lock.RLock()
-	defer j.lock.RUnlock()
-
-	for _, Run := range (j.runs) {
-		if Run.UUID == name {
-			return &Run, nil
-		}
-	}
-	return &Run{}, errors.New(fmt.Sprintf("Run '%s' not found", name))
 }
 
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
@@ -80,8 +92,8 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	if found {
 		return errors.New("Run with that name found in list")
 	}
-	j.lock.Lock()
-	defer j.lock.Unlock()
+	j.Lock()
+	defer j.Unlock()
 
 	j.runs = append(j.runs, run)
 	go j.execute(&run)
@@ -94,7 +106,7 @@ func (l *RunList) execute(r *Run) {
 	for _, task := range r.Tasks {
 		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
 		result := &r.Results[len(r.Results) - 1]
-		l.Update(*r)
+		Update(l, *r)
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
 		result.Output = string(out)
@@ -103,78 +115,30 @@ func (l *RunList) execute(r *Run) {
 			result.Error = err.Error()
 			r.Status = "Failed"
 			r.End = time.Now()
-			l.Update(*r)
+			Update(l, *r)
 			jobList := GetJobList()
-			job, err := jobList.Get(r.Job.Name)
+			job, err := Get(jobList, r.Job.Name)
 			if err != nil{
 				return
 			}
-			job.Status = "Failing"
-			jobList.Update(job)
+			j := job.(Job)
+			j.Status = "Failing"
+			Update(jobList, job)
 			return
 		}
-		l.Update(*r)
+		Update(l, *r)
 	}
 	r.End = time.Now()
 	r.Status = "Done"
 	jobList := GetJobList()
-	job, err := jobList.Get(r.Job.Name)
+	job, err := Get(jobList, r.Job.Name)
 	if err != nil {
 		return
 	}
-	job.Status = "Ok"
-	jobList.Update(job)
-	l.Update(*r)
-}
-
-func (j *RunList) Update(run Run) error {
-	j.lock.Lock()
-	defer j.lock.Unlock()
-
-	var found bool
-	var position int
-	for i, r := range j.runs {
-		if r.UUID == run.UUID {
-			position = i
-			found = true
-		}
-	}
-	if !found {
-		println("Error, can't find run " + run.UUID)
-		return errors.New("Can't find run")
-	}
-
-	j.runs[position] = run
-	Save(&runList, runsFile)
-	return nil
-}
-
-func (j *RunList) Delete(name string) error {
-	j.lock.Lock()
-	defer j.lock.Unlock()
-
-	var found bool = false
-	var i int
-	var Run *Run
-	for i, *Run = range (j.runs) {
-		if Run.UUID == name {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return errors.New("Run not found for deletion")
-	}
-	j.runs = j.runs[:i + copy(j.runs[i:], j.runs[i + 1:])]
-	Save(&runList, runsFile)
-	return nil
-}
-
-func (j RunList) Json() string {
-	j.lock.RLock()
-	defer j.lock.RUnlock()
-
-	return j.dumps()
+	j := job.(Job)
+	j.Status = "Ok"
+	Update(jobList, job)
+	Update(l, *r)
 }
 
 func (j RunList) dumps() string {

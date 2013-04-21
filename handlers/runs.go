@@ -39,14 +39,15 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.Header().Set("Content-Type", "application/json")
 			sort.Sort(Reverse{runsList})
-			w.Write([]byte(runsList.Json()))
+			w.Write([]byte(models.Json(runsList)))
 		}
 	} else if r.Method == "POST" {
 		jobsList := models.GetJobList()
 		tasksList := models.GetTaskList()
 
 		jobName := r.FormValue("job")
-		job, err := jobsList.Get(jobName)
+		job, err := models.Get(jobsList, jobName)
+		j := job.(models.Job)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -55,14 +56,15 @@ func Runs(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		var tasks []models.Task
-		for _, taskName := range(job.Tasks){
-			task, err := tasksList.Get(taskName)
+		for _, taskName := range(j.Tasks){
+			task, err := models.Get(tasksList, taskName)
 			if err != nil {
 				panic(err)
 			}
-			tasks = append(tasks, task)
+			t := task.(models.Task)
+			tasks = append(tasks, t)
 		}
-		err = runsList.AddRun(id.String(), job, tasks)
+		err = runsList.AddRun(id.String(), j, tasks)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -76,7 +78,7 @@ func Run(w http.ResponseWriter, r *http.Request) {
 	runList := models.GetRunList()
 
 	vars := mux.Vars(r)
-	run, err := runList.Get(vars["run"])
+	run, err := models.Get(runList, vars["run"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

@@ -22,8 +22,9 @@ func Triggers(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "POST" {
-		trigger := r.FormValue("name")
-		triggerList.Append(trigger)
+		name := r.FormValue("name")
+		trigger := models.Trigger{Name: name}
+		models.Append(triggerList, trigger)
 	} else {
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
 	}
@@ -33,7 +34,7 @@ func Trigger(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	vars := mux.Vars(r)
-	trigger, err := triggerList.Get(vars["trigger"])
+	trigger, err := models.Get(triggerList, vars["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -50,14 +51,14 @@ func Trigger(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "PUT" {
-		trigger.Schedule = r.FormValue("cron")
-		println(trigger.Schedule)
-		err = triggerList.Update(trigger)
+		t := trigger.(models.Trigger)
+		t.Schedule = r.FormValue("cron")
+		err = models.Update(triggerList, t)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "DELETE" {
-		triggerList.Delete(vars["trigger"])
+		models.Delete(triggerList, vars["trigger"])
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
