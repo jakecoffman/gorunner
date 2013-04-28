@@ -20,8 +20,6 @@
 	{{ template "nav" "Job" }}
 	<li class="nav-header">Actions</li>
 	<li><a href="#" id="run-job">Run Job</a></li>
-	<li><a href="#bind-trigger" role="button" data-toggle="modal">Bind Trigger</a></li>
-	<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
 	<li><a href="#" id="delete-job">Delete Job</a></li>
 {{ end }}
 
@@ -36,7 +34,7 @@
 	{{ if .Triggers }}
 		<ul>
 		{{ range $index, $_ := .Triggers }}
-			<li>{{ . }} <a href="#" class="remove-trigger" data-trigger="{{.}}"><i class="icon-remove"></i></a></li>
+			<li><a href="/triggers/{{ . }}">{{.}}</a> <a href="#" class="remove-trigger" data-trigger="{{.}}"><i class="icon-remove"></i></a></li>
 		{{ end }}
 		</ul>
 	{{ else }}
@@ -51,7 +49,7 @@
 	{{ if .Tasks }}
 		<ul id="sortable">
 		{{ range $index, $_ := .Tasks }}
-			<li class="ui-state-default">{{ . }}<a href="#" class="remove-task" data-task="{{.}}" data-position="{{$index}}"> <i class="icon-remove pull-right"></i></a> </li>
+			<li class="ui-state-default"><a href="/tasks/{{ . }}">{{.}}</a> <a href="#" class="remove-task" data-task="{{.}}" data-position="{{$index}}"> <i class="icon-remove pull-right"></i></a> </li>
 		{{ end }}
 		</ul>
 	{{ else }}
