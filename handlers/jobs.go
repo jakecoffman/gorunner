@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/jakecoffman/gorunner/models"
+	"github.com/jakecoffman/gorunner/utils"
 	"html/template"
 	"net/http"
-	"github.com/jakecoffman/gorunner/models"
-	"github.com/gorilla/mux"
-	"fmt"
 	"strconv"
-	"github.com/jakecoffman/gorunner/utils"
 )
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
-		err := models.Append(jobList, models.Job{Name:name, Status:"New"})
+		err := models.Append(jobList, models.Job{Name: name, Status: "New"})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -41,7 +41,6 @@ func Job(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	job, err := models.Get(jobList, vars["job"])
-	j := job.(models.Job)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -58,10 +57,6 @@ func Job(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
-	} else if r.Method == "POST" {
-		task := r.FormValue("task")
-		j.Append(task)
-		models.Update(jobList, j)
 	} else if r.Method == "DELETE" {
 		err := models.Delete(jobList, job.ID())
 		if err != nil {
@@ -78,19 +73,43 @@ func JobTask(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	job, err := models.Get(jobList, vars["job"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
 	j := job.(models.Job)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-	}
-
-	taskPosition, err := strconv.Atoi(vars["task"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
 
 	if r.Method == "DELETE" {
-		j.Delete(taskPosition)
+		taskPosition, err := strconv.Atoi(vars["task"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		j.DeleteTask(taskPosition)
+		models.Update(jobList, j)
+	} else if r.Method == "POST" {
+		task := r.FormValue("task")
+		j.AppendTask(task)
 		models.Update(jobList, j)
 	}
+}
+
+func JobTrigger(w http.ResponseWriter, r *http.Request) {
+	jobList := models.GetJobList()
+
+	vars := mux.Vars(r)
+	job, err := models.Get(jobList, vars["job"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+	j := job.(models.Job)
+
+	if r.Method == "DELETE" {
+		j.DeleteTrigger(vars["trigger"])
+		models.Update(jobList, j)
+	} else if r.Method == "POST" {
+		trigger := r.FormValue("trigger")
+		j.AppendTrigger(trigger)
+		models.Update(jobList, j)
+	}
+
 }

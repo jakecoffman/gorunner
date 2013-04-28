@@ -25,7 +25,7 @@ func Get(l List, id string) (Elementer, error) {
 	defer l.RUnlock()
 
 	list := l.getList()
-	for _, job := range (list) {
+	for _, job := range list {
 		if job.ID() == id {
 			return job, nil
 		}
@@ -70,7 +70,7 @@ func Delete(l List, id string) error {
 	var found bool = false
 	var i int
 	var thing Elementer
-	for i, thing = range(list) {
+	for i, thing = range list {
 		if thing.ID() == id {
 			found = true
 			break
@@ -92,7 +92,7 @@ func Json(l List) string {
 	return l.dumps()
 }
 
-func getPosition(l List, id string) (int,error) {
+func getPosition(l List, id string) (int, error) {
 	var found bool
 	var position int
 	for i, e := range l.getList() {

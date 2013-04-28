@@ -20,17 +20,38 @@
 	{{ template "nav" "Job" }}
 	<li class="nav-header">Actions</li>
 	<li><a href="#" id="run-job">Run Job</a></li>
+	<li><a href="#bind-trigger" role="button" data-toggle="modal">Bind Trigger</a></li>
 	<li><a href="#bind-task" role="button" data-toggle="modal">Bind Task</a></li>
 	<li><a href="#" id="delete-job">Delete Job</a></li>
 {{ end }}
 
 {{ define "content" }}
 	<h1>{{ .Name }}</h1>
+	<h2>Triggers</h2>
+	<div class="btn-group">
+ 		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Add
+    	<span class="caret"></span></a>
+  	<ul class="dropdown-menu" id="available-triggers"></ul>
+	</div>
+	{{ if .Triggers }}
+		<ul>
+		{{ range $index, $_ := .Triggers }}
+			<li>{{ . }} <a href="#" class="remove-trigger" data-trigger="{{.}}"><i class="icon-remove"></i></a></li>
+		{{ end }}
+		</ul>
+	{{ else }}
+		<p>There are no Triggers defined for this job.</p>
+	{{ end }}
+	<h2>Tasks</h2>
+	<div class="btn-group">
+ 		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Add
+    	<span class="caret"></span></a>
+  	<ul class="dropdown-menu" id="available-tasks"></ul>
+	</div>
 	{{ if .Tasks }}
-		<p>The following Tasks are defined for this job:</p>
 		<ul id="sortable">
 		{{ range $index, $_ := .Tasks }}
-			<li class="ui-state-default">{{ . }}<a href="#" class="remove" data-task="{{.}}" data-position="{{$index}}"> <i class="icon-remove pull-right"></i></a> </li>
+			<li class="ui-state-default">{{ . }}<a href="#" class="remove-task" data-task="{{.}}" data-position="{{$index}}"> <i class="icon-remove pull-right"></i></a> </li>
 		{{ end }}
 		</ul>
 	{{ else }}
@@ -41,23 +62,6 @@
 {{ end }}
 
 {{ define "bottom" }}
-<div id="bind-task" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	<div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-		<h3 id="myModalLabel">Bind Task</h3>
-	</div>
-	<div class="modal-body" id="bind-task-body">
-		<p>Select a task from the list to bind to this Job.</p>
-		<form name="bind-task" action="/tasks/{{ .Name }}" method="post">
-			<label for="task">Available Tasks</label>
-			<select name="task" id="task"></select>
-		</form>
-	</div>
-	<div class="modal-footer">
-		<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-		<button class="btn btn-primary" data-dismiss="modal" id="bind">Add</button>
-	</div>
-</div>
 {{ end }}
 
 {{ define "scripts" }}
@@ -65,27 +69,48 @@
 <script type="text/javascript">
 	$('#sortable').sortable({revert:true});
 
-	var ajax = $.ajax({
+	var ajaxTasks = $.ajax({
 		url: "/tasks",
 		dataType: "json"
 	});
 
-	ajax.done(function (data){
-        if(data.length == 0){
-            $('#bind-task-body').html('<p>No tasks found. <a href="/tasks">Go create one!</a></p>')
-        }
-        var option = $('<option>');
-		var options = [];
-		$.each(data, function(i, v){
-			options.push(option.clone().attr('value', v.Name).text(v.Name))
-		});
-        $('#task').append(options);
+	var ajaxTriggers = $.ajax({
+		url: "/triggers",
+		dataType: "json"
 	});
 
-	$('#bind').click(function(evt){
-		var task = $("#task").find(":selected").val();
+	ajaxTasks.done(function (data){
+        var li = $('<li>');
+        var a = $('<a href="#">');
+		var items = [];
+		$.each(data, function(i, v){
+			items.push(li.clone()
+				.append(a.clone()
+					.text(v.Name)
+					.attr('data-task',v.Name)
+					.click(addTask)));
+		});
+        $('#available-tasks').append(items);
+	});
+
+	ajaxTriggers.done(function(data){
+		var li = $('<li>');
+        var a = $('<a href="#">');
+		var items = [];
+		$.each(data, function(i, v){
+			items.push(li.clone()
+				.append(a.clone()
+					.text(v.Name)
+					.attr('data-trigger',v.Name)
+					.click(addTrigger)));
+		});
+        $('#available-triggers').append(items);
+	});
+
+	var addTask = function(evt){
+		var task = $(this).attr('data-task');
 		var ajax = $.ajax({
-			url: '/jobs/{{ .Name }}',
+			url: '/jobs/{{ .Name }}/tasks',
 			type: "post",
 			data: {task:task}
 		});
@@ -93,16 +118,44 @@
 		ajax.done(function(){
 			window.location.reload();
 		});
-	});
+	};
 
-	$('.remove').click(function(evt){
+	var addTrigger = function(evt) {
+		var trigger = $(this).attr('data-trigger');
+		var ajax = $.ajax({
+			url: '/jobs/{{ .Name }}/triggers',
+			type: "post",
+			data: {trigger:trigger}
+		});
+
+		ajax.done(function(){
+			window.location.reload();
+		});
+	};
+
+	$('.remove-task').click(function(evt){
 		var position = $(this).attr('data-position');
 		var name = $(this).attr('data-task');
 		if(!confirm("Really delete " + name + "?")){
 			return;
 		}
 		var ajax = $.ajax({
-			url: "/jobs/{{.Name}}/" + position,
+			url: "/jobs/{{.Name}}/tasks/" + position,
+			type: "delete"
+		});
+
+		ajax.done(function(){
+			window.location = "/jobs/{{.Name}}";
+		})
+	});
+
+	$('.remove-trigger').click(function(evt){
+		var name = $(this).attr('data-trigger');
+		if(!confirm("Really delete " + name + "?")){
+			return;
+		}
+		var ajax = $.ajax({
+			url: "/jobs/{{.Name}}/triggers/" + name,
 			type: "delete"
 		});
 

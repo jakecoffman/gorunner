@@ -1,25 +1,31 @@
 package handlers
 
 import (
-	"html/template"
-	"net/http"
+	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/jakecoffman/gorunner/utils"
-	"github.com/gorilla/mux"
+	"html/template"
+	"net/http"
+	"strings"
 )
 
 func Triggers(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	if r.Method == "GET" {
-		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-			"web/templates/_base.html",
-			"web/templates/_nav.html",
-			"web/templates/triggers.html",
-		))
+		if strings.Contains(r.Header.Get("Accept"), "text/html") {
+			t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
+				"web/templates/_base.html",
+				"web/templates/_nav.html",
+				"web/templates/triggers.html",
+			))
 
-		if err := t.Execute(w, triggerList); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err := t.Execute(w, triggerList); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(models.Json(triggerList)))
 		}
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")

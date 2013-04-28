@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/handlers"
+	"net"
 	"net/http"
 	"os"
-	"net"
 )
 
 const port = ":8090"
@@ -15,7 +15,7 @@ func main() {
 	wd, _ := os.Getwd()
 	println("Working directory", wd)
 
-	server := &http.Server{Addr: port, Handler: nil }
+	server := &http.Server{Addr: port, Handler: nil}
 	l, e := net.Listen("tcp", port)
 	if e != nil {
 		panic(e)
@@ -27,7 +27,10 @@ func main() {
 	r.HandleFunc("/", handlers.Jobs)
 	r.HandleFunc("/jobs", handlers.Jobs)
 	r.HandleFunc("/jobs/{job}", handlers.Job)
-	r.HandleFunc("/jobs/{job}/{task}", handlers.JobTask)
+	r.HandleFunc("/jobs/{job}/tasks", handlers.JobTask)
+	r.HandleFunc("/jobs/{job}/tasks/{task}", handlers.JobTask)
+	r.HandleFunc("/jobs/{job}/triggers", handlers.JobTrigger)
+	r.HandleFunc("/jobs/{job}/triggers/{trigger}", handlers.JobTrigger)
 
 	r.HandleFunc("/tasks", handlers.Tasks)
 	r.HandleFunc("/tasks/{task}", handlers.Task)
@@ -57,7 +60,7 @@ func main() {
 	}()
 	defer l.Close()
 
-	select{}
+	select {}
 
 	println("Dead")
 }

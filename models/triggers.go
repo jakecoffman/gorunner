@@ -25,7 +25,7 @@ func (t TriggerList) GetList() []Trigger {
 
 func (t TriggerList) getList() []Elementer {
 	var elements []Elementer
-	for _, trigger := range(t.triggers){
+	for _, trigger := range t.triggers {
 		elements = append(elements, trigger)
 	}
 	return elements
@@ -33,7 +33,7 @@ func (t TriggerList) getList() []Elementer {
 
 func (t *TriggerList) setList(e []Elementer) {
 	var triggers []Trigger
-	for _, trigger := range(e) {
+	for _, trigger := range e {
 		t := trigger.(Trigger)
 		triggers = append(triggers, t)
 	}
@@ -58,4 +58,3 @@ func (j *TriggerList) loads(s string) {
 		panic(err)
 	}
 }
-
