@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/models"
+	"github.com/jakecoffman/gorunner/executor"
 	"github.com/jakecoffman/gorunner/utils"
 	"html/template"
 	"net/http"
@@ -109,6 +110,9 @@ func JobTrigger(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		trigger := r.FormValue("trigger")
 		j.AppendTrigger(trigger)
+		triggerList := models.GetTriggerList()
+		t, _ := models.Get(triggerList, trigger)
+		executor.AddTrigger <- t.(models.Trigger)
 		models.Update(jobList, j)
 	}
 
