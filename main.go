@@ -11,6 +11,10 @@ import (
 
 const port = ":8090"
 
+func app(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "web/angular/app.html")
+}
+
 func main() {
 	wd, _ := os.Getwd()
 	println("Working directory", wd)
@@ -24,7 +28,7 @@ func main() {
 	r := mux.NewRouter()
 	r = mux.NewRouter()
 
-	r.HandleFunc("/", handlers.Jobs)
+	r.HandleFunc("/", app)
 	r.HandleFunc("/jobs", handlers.Jobs)
 	r.HandleFunc("/jobs/{job}", handlers.Job)
 	r.HandleFunc("/jobs/{job}/tasks", handlers.JobTask)

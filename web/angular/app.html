@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>gorunner</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+	<link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+	<style>
+		body {
+			padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+		}
+	</style>
+
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body ng-app="GoRunnerApp" ng-controller="MainCtl">
+<div class="navbar navbar-inverse navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container-fluid">
+			<a class="brand" href="/">gorunner</a>
+
+			<div class="nav-collapse collapse">
+				<ul class="nav">
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span3">
+			<ul class="nav nav-list" id="side-nav">
+				<li class="nav-header">Navigation</li>
+				<li class="active"><a href="#">Jobs</a></li>
+				<li><a href="#">Tasks</a></li>
+				<li><a href="#">Runs</a></li>
+				<li class="nav-header">Actions</li>
+				<li><a href="#">Add Job</a></li>
+				<li class="nav-header">Most Recent Runs</li>
+				<li><i class="icon-spinner icon-spin" ng-hide="recent"></i></li>
+				<li>
+					<ul class="unstyled" ng-repeat="run in recent">
+						<li class='history'>
+							<a href='/runs/{{ run.UUID }}'>{{ run.Job.Name }}
+							<span class='pull-right label label-info'>{{ run.Status }}</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+		<div class="span9">
+			<div ng-view></div>
+		</div>
+	</div>
+</div>
+
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script src="http://code.angularjs.org/1.1.5/angular.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

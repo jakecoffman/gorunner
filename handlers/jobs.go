@@ -3,8 +3,8 @@ package handlers
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/jakecoffman/gorunner/models"
 	"github.com/jakecoffman/gorunner/executor"
+	"github.com/jakecoffman/gorunner/models"
 	"github.com/jakecoffman/gorunner/utils"
 	"html/template"
 	"net/http"
@@ -15,15 +15,8 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	if r.Method == "GET" {
-		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-			"web/templates/_base.html",
-			"web/templates/_nav.html",
-			"web/templates/jobs.html",
-		))
-
-		if err := t.Execute(w, jobList); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(models.Json(jobList)))
 	} else if r.Method == "POST" {
 		name := r.FormValue("name")
 		err := models.Append(jobList, models.Job{Name: name, Status: "New"})

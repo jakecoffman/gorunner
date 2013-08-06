@@ -1,0 +1,19 @@
+<h1>Jobs</h1>
+<table class="table">
+	<thead>
+	<tr>
+		<th>Job</th>
+		<th>Tasks</th>
+		<th>Status</th>
+		<th>Execute</th>
+	</tr>
+	</thead>
+	<tbody ng-repeat="job in jobs">
+	<tr>
+		<td><a href="/jobs/{{ job.Name }}">{{ job.Name }}</a></td>
+		<td><span class="badge badge-inverse">{{ job.Tasks.length }}</span></td>
+		<td>{{ job.Status }}</td>
+		<td><i class="icon-play"></i></td>
+	</tr>
+	</tbody>
+</table>
