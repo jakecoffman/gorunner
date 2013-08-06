@@ -1,7 +1,7 @@
 {{ define "title" }}{{ .Name }}{{ end }}
 
 {{ define "head" }}
-<link rel="stylesheet" href="/static/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/codemirror.min.css">
 {{end}}
 
 {{ define "navigation" }}
@@ -21,8 +21,8 @@
 {{ end }}
 
 {{ define "scripts" }}
-	<script src="/static/codemirror/lib/codemirror.js"></script>
-	<script src="/static/codemirror/mode/shell/shell.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/codemirror.min.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/shell.min.js"></script>
 	<script type="text/javascript">
 		var editor = null;
 		$(function(){

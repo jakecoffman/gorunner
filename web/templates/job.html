@@ -1,7 +1,7 @@
 {{ define "title" }}{{ .Name }}{{ end }}
 
 {{ define "head" }}
-<link rel="stylesheet" href="/static/css/jquery-ui.min.css"/>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"/>
 <style>
 	.ui-sortable ul {
 		list-style-type: none;
@@ -63,7 +63,7 @@
 {{ end }}
 
 {{ define "scripts" }}
-<script src="/static/js/jquery-ui.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script type="text/javascript">
 	$('#sortable').sortable({revert:true});
 
