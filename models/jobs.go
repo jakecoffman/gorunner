@@ -7,10 +7,10 @@ import (
 )
 
 type Job struct {
-	Name     string
-	Tasks    []string
-	Status   string
-	Triggers []string
+	Name     string   `json:"name"`
+	Tasks    []string `json:"tasks"`
+	Status   string   `json:"status"`
+	Triggers []string `json:"triggers"`
 }
 
 func (j Job) ID() string {

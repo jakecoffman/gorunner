@@ -6,8 +6,8 @@ import (
 )
 
 type Task struct {
-	Name   string
-	Script string
+	Name   string `json:"name"`
+	Script string `json:"script"`
 }
 
 func (t Task) ID() string {
@@ -25,7 +25,7 @@ func (t TaskList) GetList() []Task {
 
 func (t TaskList) getList() []Elementer {
 	var elements []Elementer
-	for _, task := range(t.tasks){
+	for _, task := range t.tasks {
 		elements = append(elements, task)
 	}
 	return elements
@@ -33,7 +33,7 @@ func (t TaskList) getList() []Elementer {
 
 func (t *TaskList) setList(e []Elementer) {
 	var tasks []Task
-	for _, task := range(e) {
+	for _, task := range e {
 		t := task.(Task)
 		tasks = append(tasks, t)
 	}

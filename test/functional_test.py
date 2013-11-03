@@ -14,7 +14,7 @@ class GoRunnerAPI(object):
 
     def list_job_names(self):
         jobs = self.list_jobs()
-        return [job['Name'] for job in jobs]
+        return [job['name'] for job in jobs]
 
     def add_job(self, name):
         r = requests.post("%s/jobs" % self.host, data=json.dumps({'name': name}))
@@ -36,7 +36,7 @@ class GoRunnerAPI(object):
 
     def list_task_names(self):
         tasks = self.list_tasks()
-        return [task['Name'] for task in tasks]
+        return [task['name'] for task in tasks]
 
     def add_task(self, name):
         r = requests.post("%s/tasks" % self.host, json.dumps({'name': name}))
@@ -97,7 +97,7 @@ class TestGoAPI(unittest.TestCase):
         self.assertIn(test_name, names)
 
         thing = get(test_name)
-        self.assertEqual(test_name, thing['Name'])
+        self.assertEqual(test_name, thing['name'])
 
         delete(test_name)
         names = list_names()
