@@ -69,6 +69,16 @@ app.factory('gorunner', function($http){
 			.error(failure)
 		},
 
+		addJob: function(name, success, failure) {
+			$http({
+				method: "POST",
+				url: "/jobs",
+				data: {'name': name}
+			})
+			.success(success)
+			.error(failure);
+		},
+
 		listTasks: function(success, failure) {
 			$http({
 				method: "GET",
@@ -82,6 +92,16 @@ app.factory('gorunner', function($http){
 			$http({
 				method: "GET",
 				url: "/tasks/" + name
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		addTask: function(name, success, failure) {
+			$http({
+				method: "POST",
+				url: "/tasks",
+				data: {'name': name}
 			})
 			.success(success)
 			.error(failure);
@@ -142,6 +162,17 @@ function JobsCtl($scope, gorunner) {
 		}, function(){
 			alert("Failed to start job " + job);
 		});
+	};
+
+	$scope.promptJob = function() {
+		var name = prompt("Enter name of job:");
+		if(name) {
+			gorunner.addJob(name, function(){
+				window.location = "/#/jobs/" + name;
+			}, function(){
+				alert("Error adding job " + name);
+			})
+		}
 	}
 }
 
@@ -158,7 +189,18 @@ function TasksCtl($scope, gorunner) {
 		$scope.tasks = data;
 	}, function(data) {
 		alert("Error loading tasks");
-	})
+	});
+
+	$scope.promptTask = function() {
+		var name = prompt("Enter name of task:");
+		if(name) {
+			gorunner.addTask(name, function(){
+				window.location = "/#/tasks/" + name;
+			}, function(){
+				alert("Error adding task " + name);
+			})
+		}
+	}
 }
 
 function TaskCtl($scope, $routeParams, gorunner) {
