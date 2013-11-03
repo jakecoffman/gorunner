@@ -13,58 +13,56 @@ var app = angular.module("GoRunnerApp", [], function ($routeProvider) {
 });
 
 app.factory('gorunner', function($http){
-	var s = {};
+	return {
+		getRecentRuns: function (success, failure) {
+			$http({
+				method: "GET",
+				url: "/runs"
+			})
+			.success(success)
+			.error(failure)
+		},
 
-	s.getRecentRuns = function (scope) {
-		$http({
-			method: "GET",
-			url: "/runs"
-		})
-		.success(function (data) {
-			scope.recent = data;
-		})
-		.error(function () {
-			scope.recent = [];
-		})
-	};
+		listJobs: function (success, failure) {
+			$http({
+				method: "GET",
+				url: "/jobs"
+			})
+			.success(success)
+			.error(failure);
+		},
 
-	s.listJobs = function (scope) {
-		$http({
-			method: "GET",
-			url: "/jobs"
-		})
-		.success(function (data) {
-			scope.jobs = data;
-		})
-		.error(function () {
-			alert("Error loading jobs");
-		});
-	};
-
-	s.getJob = function(name, scope) {
-		$http({
-			method: "GET",
-			url: "/jobs/" + name
-		})
-		.success(function(data){
-			scope.job = data;
-		})
-		.error(function(){
-			alert("Error loading " + name);
-		})
-	};
-
-	return s;
+		getJob: function(name, success, failure) {
+			$http({
+				method: "GET",
+				url: "/jobs/" + name
+			})
+			.success(success)
+			.error(failure)
+		}
+	}
 });
 
 app.controller('MainCtl', function ($scope, gorunner) {
-	gorunner.getRecentRuns($scope);
+	gorunner.getRecentRuns(function(data){
+		$scope.recent = data;
+	}, function(data) {
+		$scope.recent = [];
+	});
 });
 
 function JobsCtl($scope, gorunner) {
-	gorunner.listJobs($scope);
+	gorunner.listJobs(function (data) {
+		$scope.jobs = data;
+	}, function () {
+		alert("Error loading jobs");
+	});
 }
 
 function JobCtl($scope, $routeParams, gorunner) {
-	gorunner.getJob($routeParams.job, $scope);
+	gorunner.getJob($routeParams.job, function(data){
+		$scope.job = data;
+	}, function(){
+		alert("Error loading " + name);
+	});
 }
