@@ -13,7 +13,11 @@
 		<td><a href="/#/jobs/{{ job.name }}">{{ job.name }}</a></td>
 		<td><span class="badge badge-inverse">{{ job.tasks.length }}</span></td>
 		<td>{{ job.status }}</td>
-		<td><i class="icon-play"></i></td>
+		<td>
+			<button ng-click="quickRun('{{job.name}}')" class="btn">
+				<i class="icon-play"></i>
+			</button>
+		</td>
 	</tr>
 	</tbody>
 </table>

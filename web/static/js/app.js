@@ -103,16 +103,30 @@ app.factory('gorunner', function($http){
 			})
 			.success(success)
 			.error(failure);
+		},
+
+		runJob: function(job, success, failure) {
+			$http({
+				method: "POST",
+				url: '/runs',
+				data: {job: job}
+			})
+			.success(success)
+			.error(failure);
 		}
 	}
 });
 
 app.controller('MainCtl', function ($scope, gorunner) {
-	gorunner.getRecentRuns(function(data){
-		$scope.recent = data;
-	}, function(data) {
-		$scope.recent = [];
-	});
+	$scope.refreshRuns = function() {
+		gorunner.getRecentRuns(function(data){
+			$scope.recent = data;
+		}, function(data) {
+			$scope.recent = [];
+		});
+	};
+
+	$scope.refreshRuns();
 });
 
 function JobsCtl($scope, gorunner) {
@@ -121,6 +135,14 @@ function JobsCtl($scope, gorunner) {
 	}, function () {
 		alert("Error loading jobs");
 	});
+
+	$scope.quickRun = function(job) {
+		gorunner.runJob(job, function(){
+			$scope.refreshRuns();
+		}, function(){
+			alert("Failed to start job " + job);
+		});
+	}
 }
 
 function JobCtl($scope, $routeParams, gorunner) {
