@@ -10,7 +10,7 @@
 	</thead>
 	<tbody ng-repeat="job in jobs">
 	<tr>
-		<td><a href="/jobs/{{ job.Name }}">{{ job.Name }}</a></td>
+		<td><a href="/#/jobs/{{ job.Name }}">{{ job.Name }}</a></td>
 		<td><span class="badge badge-inverse">{{ job.Tasks.length }}</span></td>
 		<td>{{ job.Status }}</td>
 		<td><i class="icon-play"></i></td>
