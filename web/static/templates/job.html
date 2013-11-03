@@ -6,10 +6,10 @@
 	<ul class="dropdown-menu" id="available-triggers"></ul>
 </div>
 
-<ul ng-show="job.Triggers">
+<ul ng-show="job.triggers">
 	<li><a href="/triggers/#"></a> <a href="#" class="remove-trigger" data-trigger="{{.}}"><i class="icon-remove"></i></a></li>
 </ul>
-<p ng-hide="job.Triggers">There are no Triggers defined for this job.</p>
+<p ng-hide="job.triggers">There are no Triggers defined for this job.</p>
 
 <h2>Tasks</h2>
 <div class="btn-group">
@@ -18,13 +18,13 @@
 <ul class="dropdown-menu" id="available-tasks"></ul>
 </div>
 
-<ul id="sortable" ng-show="job.Tasks">
-	<li class="ui-state-default" ng-repeat="task in job.Tasks track by $index">
+<ul id="sortable" ng-show="job.tasks">
+	<li class="ui-state-default" ng-repeat="task in job.tasks track by $index">
 		<a href="/#/tasks/{{ task }}">{{ task }}</a> <a href="#"> <i class="icon-remove pull-right"></i></a>
 	</li>
 </ul>
 
-<p ng-hide="job.Tasks">There are no Tasks defined for this job.</p>
+<p ng-hide="job.tasks">There are no Tasks defined for this job.</p>
 
 <hr/>
 <button id="save-changes" class="btn">Save</button>
