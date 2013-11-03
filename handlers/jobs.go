@@ -1,15 +1,21 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/executor"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/jakecoffman/gorunner/utils"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
+
+type addJobPayload struct {
+	Name string `json:"name"`
+}
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
@@ -18,12 +24,30 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(models.Json(jobList)))
 	} else if r.Method == "POST" {
-		name := r.FormValue("name")
-		err := models.Append(jobList, models.Job{Name: name, Status: "New"})
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		var payload addJobPayload
+		err = json.Unmarshal(data, &payload)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if payload.Name == "" {
+			http.Error(w, "Please provide a 'name'", http.StatusBadRequest)
+			return
+		}
+
+		err = models.Append(jobList, models.Job{Name: payload.Name, Status: "New"})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		w.WriteHeader(201)
 	} else {
 		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
 		return
