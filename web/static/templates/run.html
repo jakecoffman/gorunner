@@ -7,19 +7,16 @@
 	<li ng-show="run.end">Ended: {{run.end}}</li>
 	<li ng-hide="run.results">There don't seem to be any results.</li>
 	<li ng-show="run.results">Results:
-		<ul>
-			<li ng-repeat="result in run.results">
-				<ul>
-					<li>Started: {{result.start}}</li>
-					<li ng-hide="result.end">This task is still running</li>
-					<li ng-show="result.end">Ended: {{result.end}}</li>
-					<li>Duration: {{result.end - result.start}}</li>
-					<li ng-show="result.error">{{result.error }}</li>
-					<li ng-hide="result.output">No Output from this Task</li>
-					<li ng-show="result.output">Output:
-						<pre>{{result.output}}</pre>
-					</li>
-				</ul>
+		<ul ng-repeat="result in run.results">
+			<li><b>{{result.task.name}}</b></li>
+			<li>Started: {{result.start}}</li>
+			<li ng-hide="result.end">This task is still running</li>
+			<li ng-show="result.end">Ended: {{result.end}}</li>
+			<li>Duration: {{result.end - result.start}}</li>
+			<li ng-show="result.error">{{result.error }}</li>
+			<li ng-hide="result.output">No Output from this Task</li>
+			<li ng-show="result.output">Output:
+				<pre>{{result.output}}</pre>
 			</li>
 		</ul>
 	</li>

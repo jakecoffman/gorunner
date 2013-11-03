@@ -55,6 +55,10 @@ class GoRunnerAPI(object):
         self._raise_if_status_not(r, 200)
         return r.json()
 
+    def update_task(self, name, script):
+        r = requests.put("%s/tasks/%s" % (self.host, name), data=json.dumps({'script': script}))
+        self._raise_if_status_not(r, 200)
+
     def delete_task(self, name):
         r = requests.delete("%s/tasks/%s" % (self.host, name))
         self._raise_if_status_not(r, 200)
@@ -129,6 +133,15 @@ class TestGoAPI(unittest.TestCase):
 
         self.api.delete_job(self.test_job)
         self.api.delete_task(self.test_task)
+
+    def test_updating_task(self):
+        self.api.add_task(self.test_task)
+        task = self.api.get_task(self.test_task)
+        self.assertEqual("", task['script'])
+
+        self.api.update_task(self.test_task, "hello")
+        task = self.api.get_task(self.test_task)
+        self.assertEqual("hello", task['script'])
 
     def test_runs(self):
         self.api.add_job(self.test_job)

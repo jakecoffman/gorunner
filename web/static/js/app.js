@@ -120,7 +120,17 @@ app.factory('gorunner', function($http){
 			$http({
 				method: "POST",
 				url: "/tasks",
-				data: {'name': name}
+				data: {name: name}
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		saveTask: function(name, script, success, failure) {
+			$http({
+				method: "PUT",
+				url: "/tasks/" + name,
+				data: {script: script}
 			})
 			.success(success)
 			.error(failure);
@@ -261,7 +271,15 @@ function TaskCtl($scope, $routeParams, gorunner) {
 		$scope.task = data;
 	}, function(data) {
 		alert("Error loading task " + $routeParams.task)
-	})
+	});
+
+	$scope.saveTask = function() {
+		gorunner.saveTask($scope.task.name, $scope.task.script, function(){
+			window.location = "/#/tasks";
+		}, function(){
+			alert("Save failed");
+		})
+	}
 }
 
 function RunsCtl($scope, gorunner) {

@@ -12,6 +12,10 @@ type addTaskPayload struct {
 	Name string `json:"name"`
 }
 
+type updateTaskPayload struct {
+	Script string `json:"script"`
+}
+
 func ListTasks(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
@@ -71,9 +75,25 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	script := r.FormValue("script")
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var payload updateTaskPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Script == "" {
+		http.Error(w, "Please provide a 'script'", http.StatusBadRequest)
+		return
+	}
+
 	t := task.(models.Task)
-	t.Script = script
+	t.Script = payload.Script
 	models.Update(taskList, t)
 }
 
