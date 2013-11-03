@@ -1,41 +1,49 @@
 package handlers
 
 import (
-	"html/template"
-	"net/http"
-	"github.com/jakecoffman/gorunner/models"
-	"github.com/jakecoffman/gorunner/utils"
+	"encoding/json"
 	"github.com/gorilla/mux"
-	"strings"
+	"github.com/jakecoffman/gorunner/models"
+	"io/ioutil"
+	"net/http"
 )
 
-func Tasks(w http.ResponseWriter, r *http.Request) {
-	taskList := models.GetTaskList()
-
-	if r.Method == "GET" {
-		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-				"web/templates/_base.html",
-				"web/templates/_nav.html",
-				"web/templates/tasks.html",
-			))
-
-			if err := t.Execute(w, taskList); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		} else {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(models.Json(taskList)))
-		}
-	} else if r.Method == "POST" {
-		name := r.FormValue("name")
-		models.Append(taskList, models.Task{name, ""})
-	} else {
-		http.Error(w, "Unknown method type" , http.StatusMethodNotAllowed)
-	}
+type addTaskPayload struct {
+	Name string `json:"name"`
 }
 
-func Task(w http.ResponseWriter, r *http.Request) {
+func ListTasks(w http.ResponseWriter, r *http.Request) {
+	taskList := models.GetTaskList()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(models.Json(taskList)))
+}
+
+func AddTask(w http.ResponseWriter, r *http.Request) {
+	taskList := models.GetTaskList()
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var payload addTaskPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Name == "" {
+		http.Error(w, "Please provide a 'name'", http.StatusBadRequest)
+		return
+	}
+
+	models.Append(taskList, models.Task{payload.Name, ""})
+	w.WriteHeader(201)
+}
+
+func GetTask(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
 	vars := mux.Vars(r)
@@ -45,24 +53,39 @@ func Task(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "GET" {
-		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-			"web/templates/_base.html",
-			"web/templates/_nav.html",
-			"web/templates/task.html",
-		))
-
-		if err := t.Execute(w, task); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else if r.Method == "PUT" {
-		script := r.FormValue("script")
-		t := task.(models.Task)
-		t.Script = script
-		models.Update(taskList, t)
-	} else if r.Method == "DELETE" {
-		models.Delete(taskList, task.ID())
-	} else {
-		http.Error(w, "Unknown method type" , http.StatusMethodNotAllowed)
+	bytes, err := json.Marshal(task)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	w.Write(bytes)
+}
+
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
+	taskList := models.GetTaskList()
+
+	vars := mux.Vars(r)
+	task, err := models.Get(taskList, vars["task"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	script := r.FormValue("script")
+	t := task.(models.Task)
+	t.Script = script
+	models.Update(taskList, t)
+}
+
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	taskList := models.GetTaskList()
+
+	vars := mux.Vars(r)
+	task, err := models.Get(taskList, vars["task"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	models.Delete(taskList, task.ID())
 }

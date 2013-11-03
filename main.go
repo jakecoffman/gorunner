@@ -20,10 +20,6 @@ func main() {
 	println("Working directory", wd)
 
 	server := &http.Server{Addr: port, Handler: nil}
-	l, e := net.Listen("tcp", port)
-	if e != nil {
-		panic(e)
-	}
 
 	r := mux.NewRouter()
 	r = mux.NewRouter()
@@ -38,8 +34,11 @@ func main() {
 	r.HandleFunc("/jobs/{job}/triggers", handlers.JobTrigger)
 	r.HandleFunc("/jobs/{job}/triggers/{trigger}", handlers.JobTrigger)
 
-	r.HandleFunc("/tasks", handlers.Tasks)
-	r.HandleFunc("/tasks/{task}", handlers.Task)
+	r.HandleFunc("/tasks", handlers.ListTasks).Methods("GET")
+	r.HandleFunc("/tasks", handlers.AddTask).Methods("POST")
+	r.HandleFunc("/tasks/{task}", handlers.GetTask).Methods("GET")
+	r.HandleFunc("/tasks/{task}", handlers.UpdateTask).Methods("PUT")
+	r.HandleFunc("/tasks/{task}", handlers.DeleteTask).Methods("DELETE")
 
 	r.HandleFunc("/runs", handlers.Runs)
 	r.HandleFunc("/runs/{run}", handlers.Run)
@@ -51,20 +50,16 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
 
 	go func() {
-		// run stuff outside of the main loop
-	}()
-
-	go func() {
 		for {
 			fmt.Println("Running on " + port)
-			server.Serve(l)
-			l, e = net.Listen("tcp", port)
+			l, e := net.Listen("tcp", port)
 			if e != nil {
 				panic(e)
 			}
+			defer l.Close()
+			server.Serve(l)
 		}
 	}()
-	defer l.Close()
 
 	select {}
 
