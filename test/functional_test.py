@@ -52,8 +52,8 @@ class TestGoAPI(unittest.TestCase):
         names = self.api.list_job_names()
         self.assertIn(test_job, names)
 
-        # job = self.api.get_job(test_job)
-        # self.assertEqual(test_job, job['Name'])
+        job = self.api.get_job(test_job)
+        self.assertEqual(test_job, job['Name'])
 
         self.api.delete_job(test_job)
         names = self.api.list_job_names()

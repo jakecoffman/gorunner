@@ -29,8 +29,10 @@ func main() {
 	r = mux.NewRouter()
 
 	r.HandleFunc("/", app)
-	r.HandleFunc("/jobs", handlers.Jobs)
-	r.HandleFunc("/jobs/{job}", handlers.Job)
+	r.HandleFunc("/jobs", handlers.ListJobs).Methods("GET")
+	r.HandleFunc("/jobs", handlers.AddJob).Methods("POST")
+	r.HandleFunc("/jobs/{job}", handlers.GetJob).Methods("GET")
+	r.HandleFunc("/jobs/{job}", handlers.DeleteJob).Methods("DELETE")
 	r.HandleFunc("/jobs/{job}/tasks", handlers.JobTask)
 	r.HandleFunc("/jobs/{job}/tasks/{task}", handlers.JobTask)
 	r.HandleFunc("/jobs/{job}/triggers", handlers.JobTrigger)
