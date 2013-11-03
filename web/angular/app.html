@@ -39,9 +39,9 @@
 		<div class="span3">
 			<ul class="nav nav-list" id="side-nav">
 				<li class="nav-header">Navigation</li>
-				<li class="active"><a href="#">Jobs</a></li>
-				<li><a href="#">Tasks</a></li>
-				<li><a href="#">Runs</a></li>
+				<li ng-class="{active: title=='jobs'}"><a href="/#/jobs">Jobs</a></li>
+				<li ng-class="{active: title=='tasks'}"><a href="/#/tasks">Tasks</a></li>
+				<li><a href="/#/runs">Runs</a></li>
 				<li class="nav-header">Actions</li>
 				<li><a href="#">Add Job</a></li>
 				<li class="nav-header">Most Recent Runs</li>

@@ -8,8 +8,8 @@
 		<th>Execute</th>
 	</tr>
 	</thead>
-	<tbody ng-repeat="job in jobs">
-	<tr>
+	<tbody>
+	<tr ng-repeat="job in jobs">
 		<td><a href="/#/jobs/{{ job.name }}">{{ job.name }}</a></td>
 		<td><span class="badge badge-inverse">{{ job.tasks.length }}</span></td>
 		<td>{{ job.status }}</td>

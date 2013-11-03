@@ -1,0 +1,14 @@
+<h1>Tasks</h1>
+<p ng-hide="tasks">There are not any tasks yet. You can <a href="#add-task" role="button" data-toggle="modal">add one now</a>!</p>
+<table class="table" ng-show="tasks">
+	<thead>
+	<tr>
+		<th>Task</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr ng-repeat="task in tasks">
+		<td><a href="/#/tasks/{{ task.name }}">{{ task.name }}</a></td>
+	</tr>
+	</tbody>
+</table>
