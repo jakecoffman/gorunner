@@ -19,15 +19,25 @@ var app = angular.module("GoRunnerApp", [], function ($routeProvider) {
 		templateUrl: '/static/templates/task.html',
 		controller: TaskCtl
 	})
+	.when('/runs', {
+		title: 'runs',
+		templateUrl: '/static/templates/runs.html',
+		controller: RunsCtl
+	})
+	.when('/runs/:run', {
+		title: 'run',
+		templateUrl: '/static/templates/run.html',
+		controller: RunCtl
+	})
 	.otherwise({
 		redirectTo: '/jobs'
 	});
 });
 
 app.run(['$location', '$rootScope', function($location, $rootScope) {
-    $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
-        $rootScope.title = current.$$route.title;
-    });
+	$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
+		$rootScope.title = current.$$route.title;
+	});
 }]);
 
 app.factory('gorunner', function($http){
@@ -75,12 +85,29 @@ app.factory('gorunner', function($http){
 			})
 			.success(success)
 			.error(failure);
+		},
+
+		listRuns: function(success, failure) {
+			$http({
+				method: "GET",
+				url: "/runs"
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		getRun: function(run, success, failure) {
+			$http({
+				method: "GET",
+				url: "/runs/" + run
+			})
+			.success(success)
+			.error(failure);
 		}
 	}
 });
 
 app.controller('MainCtl', function ($scope, gorunner) {
-	$scope.page = "jobs";
 	gorunner.getRecentRuns(function(data){
 		$scope.recent = data;
 	}, function(data) {
@@ -89,7 +116,6 @@ app.controller('MainCtl', function ($scope, gorunner) {
 });
 
 function JobsCtl($scope, gorunner) {
-	$scope.page = "jobs";
 	gorunner.listJobs(function (data) {
 		$scope.jobs = data;
 	}, function () {
@@ -98,7 +124,6 @@ function JobsCtl($scope, gorunner) {
 }
 
 function JobCtl($scope, $routeParams, gorunner) {
-	$scope.page = "job";
 	gorunner.getJob($routeParams.job, function(data){
 		$scope.job = data;
 	}, function(){
@@ -107,7 +132,6 @@ function JobCtl($scope, $routeParams, gorunner) {
 }
 
 function TasksCtl($scope, gorunner) {
-	$scope.page = "tasks";
 	gorunner.listTasks(function(data) {
 		$scope.tasks = data;
 	}, function(data) {
@@ -116,10 +140,25 @@ function TasksCtl($scope, gorunner) {
 }
 
 function TaskCtl($scope, $routeParams, gorunner) {
-	$scope.page = "task";
 	gorunner.getTask($routeParams.task, function(data) {
 		$scope.task = data;
 	}, function(data) {
 		alert("Error loading task " + $routeParams.task)
+	})
+}
+
+function RunsCtl($scope, gorunner) {
+	gorunner.listRuns(function(data) {
+		$scope.runs = data;
+	}, function(data) {
+		alert("Failed to list runs");
+	})
+}
+
+function RunCtl($scope, $routeParams, gorunner) {
+	gorunner.getRun($routeParams.run, function(data) {
+		$scope.run = data;
+	}, function(data) {
+		alert("Failed to get run " + $routeParams.run);
 	})
 }

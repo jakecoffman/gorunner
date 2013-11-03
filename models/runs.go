@@ -3,27 +3,27 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"time"
 	"os/exec"
 	"sync"
+	"time"
 )
 
 type Result struct {
-	Start   time.Time
-	End     time.Time
-	Task    Task
-	Output  string
-	Error   string
+	Start  time.Time `json:"start"`
+	End    time.Time `json:"end"`
+	Task   Task      `json:"task"`
+	Output string    `json:"output"`
+	Error  string    `json:"error"`
 }
 
 type Run struct {
-	UUID    string
-	Job     Job
-	Tasks   []Task
-	Start   time.Time
-	End     time.Time
-	Results []Result
-	Status  string
+	UUID    string    `json:"uuid"`
+	Job     Job       `json:"job"`
+	Tasks   []Task    `json:"tasks"`
+	Start   time.Time `json:"start"`
+	End     time.Time `json:"end"`
+	Results []Result  `json:"results"`
+	Status  string    `json:"status"`
 }
 
 func (r Run) ID() string {
@@ -41,7 +41,7 @@ func (j RunList) GetList() []Run {
 
 func (j RunList) getList() []Elementer {
 	var elements []Elementer
-	for _, run := range(j.runs){
+	for _, run := range j.runs {
 		elements = append(elements, run)
 	}
 	return elements
@@ -49,7 +49,7 @@ func (j RunList) getList() []Elementer {
 
 func (j *RunList) setList(e []Elementer) {
 	var runs []Run
-	for _, run := range(e) {
+	for _, run := range e {
 		r := run.(Run)
 		runs = append(runs, r)
 	}
@@ -82,9 +82,9 @@ func (l RunList) Swap(i, j int) {
 }
 
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
-	run := Run{UUID:UUID, Job:job, Tasks:tasks, Start:time.Now(), Status:"New"}
+	run := Run{UUID: UUID, Job: job, Tasks: tasks, Start: time.Now(), Status: "New"}
 	var found bool = false
-	for _, j := range (j.runs) {
+	for _, j := range j.runs {
 		if run.UUID == j.UUID {
 			found = true
 		}
@@ -105,7 +105,7 @@ func (l *RunList) execute(r *Run) {
 	r.Status = "Running"
 	for _, task := range r.Tasks {
 		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
-		result := &r.Results[len(r.Results) - 1]
+		result := &r.Results[len(r.Results)-1]
 		Update(l, *r)
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
@@ -118,7 +118,7 @@ func (l *RunList) execute(r *Run) {
 			Update(l, *r)
 			jobList := GetJobList()
 			job, err := Get(jobList, r.Job.Name)
-			if err != nil{
+			if err != nil {
 				return
 			}
 			j := job.(Job)
@@ -155,4 +155,3 @@ func (j *RunList) loads(s string) {
 		panic(err)
 	}
 }
-

@@ -49,8 +49,8 @@
 				<li>
 					<ul class="unstyled" ng-repeat="run in recent">
 						<li class='history'>
-							<a href='/runs/{{ run.UUID }}'>{{ run.Job.name }}
-							<span class='pull-right label label-info'>{{ run.Status }}</span>
+							<a href='/#/runs/{{ run.uuid }}'>{{ run.job.name }}
+							<span class='pull-right label' ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running'}">{{ run.status }}</span>
 							</a>
 						</li>
 					</ul>

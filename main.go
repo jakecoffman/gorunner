@@ -29,8 +29,8 @@ func main() {
 	r.HandleFunc("/jobs", handlers.AddJob).Methods("POST")
 	r.HandleFunc("/jobs/{job}", handlers.GetJob).Methods("GET")
 	r.HandleFunc("/jobs/{job}", handlers.DeleteJob).Methods("DELETE")
-	r.HandleFunc("/jobs/{job}/tasks", handlers.JobTask)
-	r.HandleFunc("/jobs/{job}/tasks/{task}", handlers.JobTask)
+	r.HandleFunc("/jobs/{job}/tasks", handlers.AddTaskToJob).Methods("POST")
+	r.HandleFunc("/jobs/{job}/tasks/{task}", handlers.RemoveTaskFromJob).Methods("GET")
 	r.HandleFunc("/jobs/{job}/triggers", handlers.JobTrigger)
 	r.HandleFunc("/jobs/{job}/triggers/{trigger}", handlers.JobTrigger)
 
@@ -40,8 +40,9 @@ func main() {
 	r.HandleFunc("/tasks/{task}", handlers.UpdateTask).Methods("PUT")
 	r.HandleFunc("/tasks/{task}", handlers.DeleteTask).Methods("DELETE")
 
-	r.HandleFunc("/runs", handlers.Runs)
-	r.HandleFunc("/runs/{run}", handlers.Run)
+	r.HandleFunc("/runs", handlers.ListRuns).Methods("GET")
+	r.HandleFunc("/runs", handlers.AddRun).Methods("POST")
+	r.HandleFunc("/runs/{run}", handlers.GetRun).Methods("GET")
 
 	r.HandleFunc("/triggers", handlers.Triggers)
 	r.HandleFunc("/triggers/{trigger}", handlers.Trigger)

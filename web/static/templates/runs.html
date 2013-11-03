@@ -1,0 +1,25 @@
+<h1>Runs</h1>
+<p ng-hide="runs">
+	No runs yet. To create a run, first create a <a href="/#/tasks">Task</a> and assign it to a
+	<a href="/#/jobs">Job</a>, then run the job.
+</p>
+<table class="table" ng-show="runs">
+	<thead>
+	<tr>
+		<th>UUID</th>
+		<th>Job</th>
+		<th>Status</th>
+		<th>Start</th>
+		<th>End</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr ng-repeat="run in runs">
+		<td><a href="/#/runs/{{ run.uuid }}">{{ run.uuid }}</a></td>
+		<td><a href="/#/jobs/{{ run.job.name }}">{{ run.job.name }}</a></td>
+		<td><span class="label" ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running'}">{{ run.status }}</span></td>
+		<td>{{ run.start }}</td>
+		<td>{{ run.end }}</td>
+	</tr>
+	</tbody>
+</table>

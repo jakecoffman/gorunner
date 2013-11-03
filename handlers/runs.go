@@ -1,80 +1,100 @@
 package handlers
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/models"
-	"github.com/jakecoffman/gorunner/utils"
 	"github.com/nu7hatch/gouuid"
-	"html/template"
+	"io/ioutil"
 	"net/http"
 	"sort"
-	"strings"
 )
 
 type Reverse struct {
 	sort.Interface
 }
 
+type addRunPayload struct {
+	Job string `json:"job"`
+}
+
+type addRunResponse struct {
+	Uuid string `json:"uuid"`
+}
+
 func (r Reverse) Less(i, j int) bool {
 	return r.Interface.Less(j, i)
 }
 
-func Runs(w http.ResponseWriter, r *http.Request) {
+func ListRuns(w http.ResponseWriter, r *http.Request) {
 	runsList := models.GetRunList()
 
-	if r.Method == "GET" {
-		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-				"web/templates/_base.html",
-				"web/templates/_nav.html",
-				"web/templates/runs.html",
-			))
+	sort.Sort(Reverse{runsList})
+	w.Write([]byte(models.Json(runsList)))
+}
 
-			sort.Sort(Reverse{runsList})
+func AddRun(w http.ResponseWriter, r *http.Request) {
+	runsList := models.GetRunList()
+	jobsList := models.GetJobList()
+	tasksList := models.GetTaskList()
 
-			if err := t.Execute(w, runsList); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		} else {
-			w.Header().Set("Content-Type", "application/json")
-			sort.Sort(Reverse{runsList})
-			w.Write([]byte(models.Json(runsList)))
-		}
-	} else if r.Method == "POST" {
-		jobsList := models.GetJobList()
-		tasksList := models.GetTaskList()
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		jobName := r.FormValue("job")
-		job, err := models.Get(jobsList, jobName)
-		j := job.(models.Job)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		id, err := uuid.NewV4()
+	var payload addRunPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Job == "" {
+		http.Error(w, "Please provide a 'job' to run", http.StatusBadRequest)
+		return
+	}
+
+	job, err := models.Get(jobsList, payload.Job)
+	j := job.(models.Job)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	id, err := uuid.NewV4()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var tasks []models.Task
+	for _, taskName := range j.Tasks {
+		task, err := models.Get(tasksList, taskName)
 		if err != nil {
 			panic(err)
 		}
-		var tasks []models.Task
-		for _, taskName := range(j.Tasks){
-			task, err := models.Get(tasksList, taskName)
-			if err != nil {
-				panic(err)
-			}
-			t := task.(models.Task)
-			tasks = append(tasks, t)
-		}
-		err = runsList.AddRun(id.String(), j, tasks)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else {
-		http.Error(w, fmt.Sprintf("Method '%s' not allowed on this path", r.Method), http.StatusMethodNotAllowed)
+		t := task.(models.Task)
+		tasks = append(tasks, t)
+	}
+	err = runsList.AddRun(id.String(), j, tasks)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	var idResponse addRunResponse
+	idResponse.Uuid = id.String()
+	data, err = json.Marshal(idResponse)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(201)
+	w.Write(data)
 }
 
-func Run(w http.ResponseWriter, r *http.Request) {
+func GetRun(w http.ResponseWriter, r *http.Request) {
 	runList := models.GetRunList()
 
 	vars := mux.Vars(r)
@@ -84,18 +104,10 @@ func Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "GET" {
-		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-			"web/templates/_base.html",
-			"web/templates/_nav.html",
-			"web/templates/run.html",
-		))
-
-		if err := t.Execute(w, run); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+	bytes, err := json.Marshal(run)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else {
-		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
+	w.Write(bytes)
 }

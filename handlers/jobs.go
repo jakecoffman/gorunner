@@ -14,6 +14,10 @@ type addJobPayload struct {
 	Name string `json:"name"`
 }
 
+type addTaskToJobPayload struct {
+	Task string `json:"task"`
+}
+
 func ListJobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
@@ -84,7 +88,7 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func JobTask(w http.ResponseWriter, r *http.Request) {
+func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
@@ -94,19 +98,45 @@ func JobTask(w http.ResponseWriter, r *http.Request) {
 	}
 	j := job.(models.Job)
 
-	if r.Method == "DELETE" {
-		taskPosition, err := strconv.Atoi(vars["task"])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		j.DeleteTask(taskPosition)
-		models.Update(jobList, j)
-	} else if r.Method == "POST" {
-		task := r.FormValue("task")
-		j.AppendTask(task)
-		models.Update(jobList, j)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+
+	var payload addTaskToJobPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Task == "" {
+		http.Error(w, "Please provide a 'task' to add to "+j.Name, http.StatusBadRequest)
+		return
+	}
+	j.AppendTask(payload.Task)
+	models.Update(jobList, j)
+
+	w.WriteHeader(201)
+}
+
+func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
+	jobList := models.GetJobList()
+
+	vars := mux.Vars(r)
+	job, err := models.Get(jobList, vars["job"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+	j := job.(models.Job)
+
+	taskPosition, err := strconv.Atoi(vars["task"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	j.DeleteTask(taskPosition)
+	models.Update(jobList, j)
 }
 
 func JobTrigger(w http.ResponseWriter, r *http.Request) {
