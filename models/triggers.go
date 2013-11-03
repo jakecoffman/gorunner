@@ -6,8 +6,8 @@ import (
 )
 
 type Trigger struct {
-	Name     string
-	Schedule string
+	Name     string `json:"name"`
+	Schedule string `json:"schedule"`
 }
 
 func (t Trigger) ID() string {

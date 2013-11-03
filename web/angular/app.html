@@ -41,6 +41,7 @@
 				<li class="nav-header">Navigation</li>
 				<li ng-class="{active: title=='jobs'}"><a href="/#/jobs">Jobs</a></li>
 				<li ng-class="{active: title=='tasks'}"><a href="/#/tasks">Tasks</a></li>
+				<li ng-class="{active: title=='triggers'}"><a href="/#/triggers">Triggers</a></li>
 				<li><a href="/#/runs">Runs</a></li>
 				<li class="nav-header">Most Recent Runs</li>
 				<li><i class="icon-spinner icon-spin" ng-hide="recent"></i></li>
@@ -48,7 +49,7 @@
 					<ul class="unstyled" ng-repeat="run in recent">
 						<li class='history'>
 							<a href='/#/runs/{{ run.uuid }}'>{{ run.job.name }}
-							<span class='pull-right label' ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running'}">{{ run.status }}</span>
+							<span class='pull-right label' ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running', 'label-important': run.status=='Failed'}">{{ run.status }}</span>
 							</a>
 						</li>
 					</ul>

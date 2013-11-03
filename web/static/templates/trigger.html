@@ -1,0 +1,6 @@
+<h1>{{ trigger.name }}</h1>
+<p>Enter how often this trigger should fire:</p>
+<div class="input-append">
+	<input type="text" name="cron" id="cron" ng-model="trigger.schedule"/>
+	<input type="submit" class="btn" value="Save" ng-click="saveTrigger()"/>
+</div>

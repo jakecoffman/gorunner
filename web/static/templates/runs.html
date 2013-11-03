@@ -17,7 +17,7 @@
 	<tr ng-repeat="run in runs">
 		<td><a href="/#/runs/{{ run.uuid }}">{{ run.uuid }}</a></td>
 		<td><a href="/#/jobs/{{ run.job.name }}">{{ run.job.name }}</a></td>
-		<td><span class="label" ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running'}">{{ run.status }}</span></td>
+		<td><span class="label" ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running', 'label-important': run.status=='Failed'}">{{ run.status }}</span></td>
 		<td>{{ run.start }}</td>
 		<td>{{ run.end }}</td>
 	</tr>

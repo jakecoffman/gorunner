@@ -1,43 +1,55 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/executor"
 	"github.com/jakecoffman/gorunner/models"
-	"github.com/jakecoffman/gorunner/utils"
-	"html/template"
+	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
-func Triggers(w http.ResponseWriter, r *http.Request) {
-	triggerList := models.GetTriggerList()
-
-	if r.Method == "GET" {
-		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-				"web/templates/_base.html",
-				"web/templates/_nav.html",
-				"web/templates/triggers.html",
-			))
-
-			if err := t.Execute(w, triggerList); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		} else {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(models.Json(triggerList)))
-		}
-	} else if r.Method == "POST" {
-		name := r.FormValue("name")
-		trigger := models.Trigger{Name: name}
-		models.Append(triggerList, trigger)
-	} else {
-		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
-	}
+type addTriggerPayload struct {
+	Name string `json:"name"`
 }
 
-func Trigger(w http.ResponseWriter, r *http.Request) {
+type updateTriggerPayload struct {
+	Cron string `json:"cron"`
+}
+
+func ListTriggers(w http.ResponseWriter, r *http.Request) {
+	triggerList := models.GetTriggerList()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(models.Json(triggerList)))
+}
+
+func AddTrigger(w http.ResponseWriter, r *http.Request) {
+	triggerList := models.GetTriggerList()
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var payload addTriggerPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Name == "" {
+		http.Error(w, "Please provide a 'name'", http.StatusBadRequest)
+		return
+	}
+
+	trigger := models.Trigger{Name: payload.Name}
+	models.Append(triggerList, trigger)
+	w.WriteHeader(201)
+}
+
+func GetTrigger(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	vars := mux.Vars(r)
@@ -47,27 +59,54 @@ func Trigger(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "GET" {
-		t := template.Must(template.New("_base.html").Funcs(utils.FuncMap).ParseFiles(
-			"web/templates/_base.html",
-			"web/templates/_nav.html",
-			"web/templates/trigger.html",
-		))
-
-		if err := t.Execute(w, trigger); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else if r.Method == "PUT" {
-		t := trigger.(models.Trigger)
-		t.Schedule = r.FormValue("cron")
-		executor.AddTrigger <- t
-		err = models.Update(triggerList, t)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else if r.Method == "DELETE" {
-		models.Delete(triggerList, vars["trigger"])
-	} else {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	bytes, err := json.Marshal(trigger)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	w.Write(bytes)
+}
+
+func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
+	triggerList := models.GetTriggerList()
+
+	vars := mux.Vars(r)
+	trigger, err := models.Get(triggerList, vars["trigger"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var payload updateTriggerPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Cron == "" {
+		http.Error(w, "Please provide a 'cron'", http.StatusBadRequest)
+		return
+	}
+
+	t := trigger.(models.Trigger)
+	t.Schedule = payload.Cron
+	executor.AddTrigger <- t
+	err = models.Update(triggerList, t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
+	triggerList := models.GetTriggerList()
+
+	vars := mux.Vars(r)
+
+	models.Delete(triggerList, vars["trigger"])
 }

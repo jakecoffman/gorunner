@@ -44,8 +44,11 @@ func main() {
 	r.HandleFunc("/runs", handlers.AddRun).Methods("POST")
 	r.HandleFunc("/runs/{run}", handlers.GetRun).Methods("GET")
 
-	r.HandleFunc("/triggers", handlers.Triggers)
-	r.HandleFunc("/triggers/{trigger}", handlers.Trigger)
+	r.HandleFunc("/triggers", handlers.ListTriggers).Methods("GET")
+	r.HandleFunc("/triggers", handlers.AddTrigger).Methods("POST")
+	r.HandleFunc("/triggers/{trigger}", handlers.GetTrigger).Methods("GET")
+	r.HandleFunc("/triggers/{trigger}", handlers.UpdateTrigger).Methods("PUT")
+	r.HandleFunc("/triggers/{trigger}", handlers.DeleteTrigger).Methods("DELETE")
 
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))

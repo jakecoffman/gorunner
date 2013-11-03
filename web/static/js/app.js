@@ -19,6 +19,16 @@ var app = angular.module("GoRunnerApp", [], function ($routeProvider) {
 		templateUrl: '/static/templates/task.html',
 		controller: TaskCtl
 	})
+	.when('/triggers', {
+		title: 'triggers',
+		templateUrl: '/static/templates/triggers.html',
+		controller: TriggersCtl
+	})
+	.when('/triggers/:trigger', {
+		title: 'trigger',
+		templateUrl: '/static/templates/trigger.html',
+		controller: TriggerCtl
+	})
 	.when('/runs', {
 		title: 'runs',
 		templateUrl: '/static/templates/runs.html',
@@ -36,7 +46,9 @@ var app = angular.module("GoRunnerApp", [], function ($routeProvider) {
 
 app.run(['$location', '$rootScope', function($location, $rootScope) {
 	$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
-		$rootScope.title = current.$$route.title;
+		if(current.$$route) {
+			$rootScope.title = current.$$route.title;
+		}
 	});
 }]);
 
@@ -159,6 +171,53 @@ app.factory('gorunner', function($http){
 				method: "POST",
 				url: '/runs',
 				data: {job: job}
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		listTriggers: function(success, failure) {
+			$http({
+				method: "GET",
+				url: "/triggers"
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		getTrigger: function(name, success, failure) {
+			$http({
+				method: "GET",
+				url: "/triggers/" + name
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		saveTrigger: function(name, cron, success, failure) {
+			$http({
+				method: "PUT",
+				url: "/triggers/" + name,
+				data: {cron: cron}
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		addTrigger: function(name, success, failure) {
+			$http({
+				method: "POST",
+				url: "/triggers",
+				data: {name: name}
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		deleteTrigger: function(name, success, failure) {
+			$http({
+				method: "DELETE",
+				url: "/triggers/" + name
 			})
 			.success(success)
 			.error(failure);
@@ -296,4 +355,55 @@ function RunCtl($scope, $routeParams, gorunner) {
 	}, function(data) {
 		alert("Failed to get run " + $routeParams.run);
 	})
+}
+
+function TriggersCtl($scope, gorunner) {
+	$scope.refreshTriggers = function(){
+		gorunner.listTriggers(function(data){
+			$scope.triggers = data;
+		}, function() {
+			alert("Failed to load triggers");
+		})
+	};
+
+	$scope.refreshTriggers();
+
+	$scope.deleteTrigger = function(name) {
+		gorunner.deleteTrigger(name, function(){
+			$scope.refreshTriggers();
+		}, function(){
+			alert("Failed to delete trigger " + name);
+		});
+	};
+
+	$scope.promptTrigger = function(){
+		var name = prompt("Enter a name for the new trigger");
+		if(name) {
+			gorunner.addTrigger(name, function(){
+				$scope.refreshTriggers();
+			}, function(){
+				alert("Failed to load triggers");
+			})
+		}
+	}
+}
+
+function TriggerCtl($scope, $routeParams, gorunner) {
+	$scope.getTrigger = function(name) {
+		gorunner.getTrigger(name, function(data){
+			$scope.trigger = data;
+		}, function(){
+			alert("Failed to get trigger " + $routeParams.trigger);
+		});
+	};
+
+	$scope.getTrigger($routeParams.trigger);
+
+	$scope.saveTrigger = function() {
+		gorunner.saveTrigger($scope.trigger.name, $scope.trigger.schedule, function(){
+			window.location = "/#/triggers";
+		}, function() {
+			alert("Failed to save trigger");
+		})
+	};
 }

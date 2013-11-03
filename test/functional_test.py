@@ -77,6 +77,32 @@ class GoRunnerAPI(object):
         self._raise_if_status_not(r, 201)
         return r.json()
 
+    def list_triggers(self):
+        r = requests.get("%s/triggers" % self.host)
+        self._raise_if_status_not(r, 200)
+        return r.json()
+
+    def list_trigger_names(self):
+        triggers = self.list_triggers()
+        return [trigger['name'] for trigger in triggers]
+
+    def add_trigger(self, name):
+        r = requests.post("%s/triggers" % self.host, data=json.dumps({'name': name}))
+        self._raise_if_status_not(r, 201)
+
+    def get_trigger(self, name):
+        r = requests.get("%s/triggers/%s" % (self.host, name))
+        self._raise_if_status_not(r, 200)
+        return r.json()
+
+    def update_trigger(self, name, cron):
+        r = requests.put("%s/triggers/%s" % (self.host, name), data=json.dumps({'cron': cron}))
+        self._raise_if_status_not(r, 200)
+
+    def delete_trigger(self, name):
+        r = requests.delete("%s/triggers/%s" % (self.host, name))
+        self._raise_if_status_not(r, 200)
+
     def _raise_if_status_not(self, r, status):
         if r.status_code != status:
             raise Exception(r.text)
@@ -88,6 +114,7 @@ class TestGoAPI(unittest.TestCase):
 
         self.test_job = "test_job999"
         self.test_task = "test_task999"
+        self.test_trigger = "test_trigger999"
 
     def tearDown(self):
         try:
@@ -104,6 +131,9 @@ class TestGoAPI(unittest.TestCase):
 
     def test_tasks(self):
         self.crud_test(self.api.list_task_names, self.api.delete_task, self.api.add_task, self.api.get_task)
+
+    def test_triggers(self):
+        self.crud_test(self.api.list_trigger_names, self.api.delete_trigger, self.api.add_trigger, self.api.get_trigger)
 
     def test_adding_job_with_no_name(self):
         try:
@@ -143,6 +173,14 @@ class TestGoAPI(unittest.TestCase):
         task = self.api.get_task(self.test_task)
         self.assertEqual("hello", task['script'])
 
+    def test_updating_trigger(self):
+        self.api.add_trigger(self.test_trigger)
+        trigger = self.api.get_trigger(self.test_trigger)
+        self.assertEqual("", trigger['schedule'])
+        self.api.update_trigger(self.test_trigger, "0 * * * *")
+        trigger = self.api.get_trigger(self.test_trigger)
+        self.assertEqual("0 * * * *", trigger['schedule'])
+
     def test_runs(self):
         self.api.add_job(self.test_job)
         self.api.add_task(self.test_task)
@@ -150,8 +188,6 @@ class TestGoAPI(unittest.TestCase):
         uuid = self.api.run_job(self.test_job)['uuid']
         runs = self.api.list_run_ids()
         self.assertIn(uuid, runs)
-
-        print json.dumps(self.api.list_runs(), indent=4)
 
     def crud_test(self, list_names, delete, add, get):
         test_name = "test999"

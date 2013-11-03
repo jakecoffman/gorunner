@@ -1,0 +1,27 @@
+<div class="pull-right">
+	<div class="btn-group">
+		<button class="btn dropdown-toggle" data-toggle="dropdown">
+			<i class="icon-gear icon-large"></i>
+			<span class="caret"></span>
+		</button>
+		<ul class="dropdown-menu pull-right">
+			<li><a href="javascript:void(0)" ng-click="promptTrigger()"><i class="icon-plus"></i> Add new trigger</a></li>
+		</ul>
+	</div>
+</div>
+<h1>Triggers</h1>
+<p ng-hide="triggers">There are no triggers. You can add one by clicking the gear above.</p>
+<table class="table" ng-show="triggers">
+	<thead>
+	<tr>
+		<th>Trigger</th>
+		<th>Delete</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr ng-repeat="trigger in triggers">
+		<td><a href="/#/triggers/{{ trigger.name }}">{{ trigger.name }}</a></td>
+		<td><button class="btn" ng-click="deleteTrigger('{{trigger.name}}')"><i class="icon-remove"></i></button></td>
+	</tr>
+	</tbody>
+</table>
