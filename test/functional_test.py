@@ -33,6 +33,10 @@ class GoRunnerAPI(object):
         r = requests.post("%s/jobs/%s/tasks" % (self.host, job), json.dumps({'task': task}))
         self._raise_if_status_not(r, 201)
 
+    def remove_task_from_job(self, task, job):
+        r = requests.delete("%s/jobs/%s/tasks/%s" % (self.host, job, task))
+        self._raise_if_status_not(r, 200)
+
     def list_tasks(self):
         r = requests.get("%s/tasks" % self.host)
         self._raise_if_status_not(r, 200)
@@ -82,8 +86,14 @@ class TestGoAPI(unittest.TestCase):
         self.test_task = "test_task999"
 
     def tearDown(self):
-        self.api.delete_job(self.test_job)
-        self.api.delete_task(self.test_task)
+        try:
+            self.api.delete_job(self.test_job)
+        except:
+            pass
+        try:
+            self.api.delete_task(self.test_task)
+        except:
+            pass
 
     def test_jobs(self):
         self.crud_test(self.api.list_job_names, self.api.delete_job, self.api.add_job, self.api.get_job)
@@ -105,13 +115,17 @@ class TestGoAPI(unittest.TestCase):
         except Exception:
             pass
 
-    def test_add_task_to_job(self):
+    def test_add_remove_task_to_job(self):
         self.api.add_job(self.test_job)
         self.api.add_task(self.test_task)
         self.api.add_task_to_job(self.test_task, self.test_job)
 
         job = self.api.get_job(self.test_job)
         self.assertIn(self.test_task, job['tasks'])
+
+        self.api.remove_task_from_job(0, self.test_job)
+        job = self.api.get_job(self.test_job)
+        self.assertNotIn(self.test_task, job['tasks'])
 
         self.api.delete_job(self.test_job)
         self.api.delete_task(self.test_task)

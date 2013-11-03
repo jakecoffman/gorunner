@@ -30,7 +30,7 @@ func main() {
 	r.HandleFunc("/jobs/{job}", handlers.GetJob).Methods("GET")
 	r.HandleFunc("/jobs/{job}", handlers.DeleteJob).Methods("DELETE")
 	r.HandleFunc("/jobs/{job}/tasks", handlers.AddTaskToJob).Methods("POST")
-	r.HandleFunc("/jobs/{job}/tasks/{task}", handlers.RemoveTaskFromJob).Methods("GET")
+	r.HandleFunc("/jobs/{job}/tasks/{task}", handlers.RemoveTaskFromJob).Methods("DELETE")
 	r.HandleFunc("/jobs/{job}/triggers", handlers.JobTrigger)
 	r.HandleFunc("/jobs/{job}/triggers/{trigger}", handlers.JobTrigger)
 

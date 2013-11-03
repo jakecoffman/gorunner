@@ -79,6 +79,25 @@ app.factory('gorunner', function($http){
 			.error(failure);
 		},
 
+		addTaskToJob: function(task, job, success, failure){
+			$http({
+				method: "POST",
+				url: "/jobs/" + job + "/tasks",
+				data: {task: task}
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		removeTaskFromJob: function(task_idx, job, success, failure) {
+			$http({
+				method: "DELETE",
+				url: "/jobs/" + job + "/tasks/" + task_idx
+			})
+			.success(success)
+			.error(failure);
+		},
+
 		listTasks: function(success, failure) {
 			$http({
 				method: "GET",
@@ -177,11 +196,45 @@ function JobsCtl($scope, gorunner) {
 }
 
 function JobCtl($scope, $routeParams, gorunner) {
-	gorunner.getJob($routeParams.job, function(data){
-		$scope.job = data;
-	}, function(){
-		alert("Error loading " + name);
-	});
+	$scope.job = $routeParams.job;
+
+	$scope.refreshJob = function(){
+		gorunner.getJob($routeParams.job, function(data){
+			$scope.job = data;
+		}, function(){
+			alert("Error loading " + name);
+		});
+	};
+
+	$scope.tasks = [];
+	$scope.refreshTasks = function(){
+		gorunner.listTasks(function(data) {
+			for(var i=0; i<data.length; i++) {
+				$scope.tasks.push(data[i].name);
+			}
+		}, function(data) {
+			alert("Error loading tasks");
+		});
+	};
+
+	$scope.removeTask = function(idx) {
+		gorunner.removeTaskFromJob(idx, $routeParams.job, function(){
+			$scope.refreshJob();
+		}, function(){
+			alert("Failed to remove task");
+		})
+	};
+
+	$scope.addTaskToJob = function(task) {
+		gorunner.addTaskToJob(task, $routeParams.job, function(){
+			$scope.refreshJob();
+		}, function() {
+			alert("Failed to add task to job");
+		});
+	};
+
+	$scope.refreshJob();
+	$scope.refreshTasks();
 }
 
 function TasksCtl($scope, gorunner) {

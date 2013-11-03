@@ -2,25 +2,35 @@
 <h2>Triggers</h2>
 <div class="btn-group">
 	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Add
-	<span class="caret"></span></a>
+		<span class="caret"></span></a>
 	<ul class="dropdown-menu" id="available-triggers"></ul>
 </div>
 
 <ul ng-show="job.triggers">
-	<li><a href="/triggers/#"></a> <a href="#" class="remove-trigger" data-trigger="{{.}}"><i class="icon-remove"></i></a></li>
+	<li>
+		<a href="/triggers/#"></a>
+		<a href="#" class="remove-trigger" data-trigger="{{.}}">
+			<i class="icon-remove"></i>
+		</a>
+	</li>
 </ul>
 <p ng-hide="job.triggers">There are no Triggers defined for this job.</p>
 
 <h2>Tasks</h2>
 <div class="btn-group">
-	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Add
-	<span class="caret"></span></a>
-<ul class="dropdown-menu" id="available-tasks"></ul>
+	<button class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+		Add <span class="caret"></span>
+	</button>
+	<ul class="dropdown-menu">
+		<li ng-repeat="task in tasks">
+			<a ng-click="addTaskToJob('{{task}}')" href="javascript:void(0)">{{ task }}</a>
+		</li>
+	</ul>
 </div>
 
 <ul id="sortable" ng-show="job.tasks">
 	<li class="ui-state-default" ng-repeat="task in job.tasks track by $index">
-		<a href="/#/tasks/{{ task }}">{{ task }}</a> <a href="#"> <i class="icon-remove pull-right"></i></a>
+		<a href="/#/tasks/{{ task }}">{{ task }}</a> <button class="btn" ng-click="removeTask($index)"><i class="icon-remove pull-right"></i></button>
 	</li>
 </ul>
 
