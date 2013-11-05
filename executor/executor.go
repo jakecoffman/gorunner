@@ -10,8 +10,10 @@ import (
 
 var c *cron.Cron
 var AddTrigger chan models.Trigger
+var triggers map[string]struct{}
 
 func init() {
+	triggers = make(map[string]struct{})
 	AddTrigger = make(chan models.Trigger)
 	c = cron.New()
 	c.Start()
@@ -20,7 +22,11 @@ func init() {
 		for {
 			select {
 			case trigger := <-AddTrigger:
-				c.AddFunc(trigger.Schedule, func() { findAndRun(trigger) })
+				_, ok := triggers[trigger.Schedule]
+				if !ok {
+					triggers[trigger.Schedule] = struct{}{}
+					c.AddFunc(trigger.Schedule, func() { findAndRun(trigger) })
+				}
 			}
 		}
 	}()
