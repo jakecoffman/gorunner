@@ -1,17 +1,19 @@
 <h1>{{ job.Name }}</h1>
 <h2>Triggers</h2>
 <div class="btn-group">
-	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Add
-		<span class="caret"></span></a>
-	<ul class="dropdown-menu" id="available-triggers"></ul>
+	<button class="btn dropdown-toggle" data-toggle="dropdown">Add
+		<span class="caret"></span></button>
+	<ul class="dropdown-menu">
+		<li ng-repeat="trigger in triggers">
+			<a ng-click="addTriggerToJob('{{trigger}}')" href="javascript:void(0)">{{ trigger }}</a>
+		</li>
+	</ul>
 </div>
 
 <ul ng-show="job.triggers">
-	<li>
-		<a href="/triggers/#"></a>
-		<a href="#" class="remove-trigger" data-trigger="{{.}}">
-			<i class="icon-remove"></i>
-		</a>
+	<li ng-repeat="trigger in job.triggers">
+		<a href="/#/triggers/{{trigger}}">{{trigger}}</a>
+		<button class="btn" ng-click="removeTrigger('{{trigger}}')"><i class="icon-remove pull-right"></i></button>
 	</li>
 </ul>
 <p ng-hide="job.triggers">There are no Triggers defined for this job.</p>

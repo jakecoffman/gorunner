@@ -26,11 +26,13 @@ func init() {
 	}()
 }
 
+// Walks through each job, seeing if the trigger who's turn it is to execute is attached. Executes those jobs.
 func findAndRun(t models.Trigger) {
 	jobList := models.GetJobList()
 	for _, job := range jobList.GetList() {
 		for _, trigger := range job.Triggers {
 			if trigger == t.ID() {
+				fmt.Println("Running job " + job.Name)
 				runnit(job)
 				break
 			}
@@ -38,6 +40,7 @@ func findAndRun(t models.Trigger) {
 	}
 }
 
+// Gathers the tasks attached to the given job and executes them.
 func runnit(j models.Job) {
 	tasksList := models.GetTaskList()
 	runsList := models.GetRunList()

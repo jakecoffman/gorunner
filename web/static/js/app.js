@@ -101,10 +101,29 @@ app.factory('gorunner', function($http){
 			.error(failure);
 		},
 
+		addTriggerToJob: function(trigger, job, success, failure) {
+			$http({
+				method: "POST",
+				url: "/jobs/" + job + "/triggers",
+				data: {trigger: trigger}
+			})
+			.success(success)
+			.error(failure);
+		},
+
 		removeTaskFromJob: function(task_idx, job, success, failure) {
 			$http({
 				method: "DELETE",
 				url: "/jobs/" + job + "/tasks/" + task_idx
+			})
+			.success(success)
+			.error(failure);
+		},
+
+		removeTriggerFromJob: function(trigger, job, success, failure) {
+			$http({
+				method: "DELETE",
+				url: "/jobs/" + job + "/triggers/" + trigger
 			})
 			.success(success)
 			.error(failure);
@@ -286,11 +305,30 @@ function JobCtl($scope, $routeParams, gorunner) {
 		});
 	};
 
+	$scope.triggers = [];
+	$scope.refreshTriggers = function() {
+		gorunner.listTriggers(function(data){
+			for(var i=0; i<data.length; i++) {
+				$scope.triggers.push(data[i].name);
+			}
+		}, function(data){
+			alert("Error loading triggers")
+		});
+	};
+
 	$scope.removeTask = function(idx) {
 		gorunner.removeTaskFromJob(idx, $routeParams.job, function(){
 			$scope.refreshJob();
 		}, function(){
 			alert("Failed to remove task");
+		})
+	};
+
+	$scope.removeTrigger = function(name) {
+		gorunner.removeTriggerFromJob(name, $routeParams.job, function(){
+			$scope.refreshJob()
+		}, function() {
+			alert("Failed to remove trigger");
 		})
 	};
 
@@ -302,8 +340,17 @@ function JobCtl($scope, $routeParams, gorunner) {
 		});
 	};
 
+	$scope.addTriggerToJob = function(trigger) {
+		gorunner.addTriggerToJob(trigger, $routeParams.job, function(){
+			$scope.refreshJob();
+		}, function() {
+			alert("Failed to add trigger to job")
+		})
+	};
+
 	$scope.refreshJob();
 	$scope.refreshTasks();
+	$scope.refreshTriggers();
 }
 
 function TasksCtl($scope, gorunner) {

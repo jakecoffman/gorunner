@@ -18,6 +18,10 @@ type addTaskToJobPayload struct {
 	Task string `json:"task"`
 }
 
+type addTriggerToJobPayload struct {
+	Trigger string `json:"trigger"`
+}
+
 func ListJobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
@@ -95,6 +99,7 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 	job, err := models.Get(jobList, vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 	j := job.(models.Job)
 
@@ -127,6 +132,7 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 	job, err := models.Get(jobList, vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 	j := job.(models.Job)
 
@@ -139,26 +145,58 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 	models.Update(jobList, j)
 }
 
-func JobTrigger(w http.ResponseWriter, r *http.Request) {
+func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := models.Get(jobList, vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 	j := job.(models.Job)
 
-	if r.Method == "DELETE" {
-		j.DeleteTrigger(vars["trigger"])
-		models.Update(jobList, j)
-	} else if r.Method == "POST" {
-		trigger := r.FormValue("trigger")
-		j.AppendTrigger(trigger)
-		triggerList := models.GetTriggerList()
-		t, _ := models.Get(triggerList, trigger)
-		executor.AddTrigger <- t.(models.Trigger)
-		models.Update(jobList, j)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
+	var payload addTriggerToJobPayload
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if payload.Trigger == "" {
+		http.Error(w, "Please provide a 'trigger' to add to "+j.Name, http.StatusBadRequest)
+		return
+	}
+
+	j.AppendTrigger(payload.Trigger)
+	triggerList := models.GetTriggerList()
+	t, err := models.Get(triggerList, payload.Trigger)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	executor.AddTrigger <- t.(models.Trigger)
+	models.Update(jobList, j)
+
+	w.WriteHeader(201)
+}
+
+func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
+	jobList := models.GetJobList()
+
+	vars := mux.Vars(r)
+	job, err := models.Get(jobList, vars["job"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	j := job.(models.Job)
+
+	j.DeleteTrigger(vars["trigger"])
+	models.Update(jobList, j)
 }

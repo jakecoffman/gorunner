@@ -103,6 +103,14 @@ class GoRunnerAPI(object):
         r = requests.delete("%s/triggers/%s" % (self.host, name))
         self._raise_if_status_not(r, 200)
 
+    def add_trigger_to_job(self, trigger, job):
+        r = requests.post("%s/jobs/%s/triggers" % (self.host, job), data=json.dumps({'trigger': trigger}))
+        self._raise_if_status_not(r, 201)
+
+    def remove_trigger_from_job(self, trigger_idx, job):
+        r = requests.delete("%s/jobs/%s/triggers/%s" % (self.host, job, trigger_idx))
+        self._raise_if_status_not(r, 200)
+
     def _raise_if_status_not(self, r, status):
         if r.status_code != status:
             raise Exception(r.text)
@@ -115,8 +123,12 @@ class TestGoAPI(unittest.TestCase):
         self.test_job = "test_job999"
         self.test_task = "test_task999"
         self.test_trigger = "test_trigger999"
+        self._clean()
 
     def tearDown(self):
+        self._clean()
+
+    def _clean(self):
         try:
             self.api.delete_job(self.test_job)
         except:
@@ -161,8 +173,21 @@ class TestGoAPI(unittest.TestCase):
         job = self.api.get_job(self.test_job)
         self.assertNotIn(self.test_task, job['tasks'])
 
-        self.api.delete_job(self.test_job)
-        self.api.delete_task(self.test_task)
+    def test_add_remove_trigger_to_job(self):
+        self.api.add_job(self.test_job)
+        try:
+            self.api.add_trigger(self.test_trigger)
+        except:
+            pass
+        self.api.update_trigger(self.test_trigger, "* * * * * *")
+        self.api.add_trigger_to_job(self.test_trigger, self.test_job)
+
+        job = self.api.get_job(self.test_job)
+        self.assertIn(self.test_trigger, job['triggers'])
+
+        self.api.remove_trigger_from_job(self.test_trigger, self.test_job)
+        job = self.api.get_job(self.test_job)
+        self.assertNotIn(self.test_trigger, job['triggers'])
 
     def test_updating_task(self):
         self.api.add_task(self.test_task)
