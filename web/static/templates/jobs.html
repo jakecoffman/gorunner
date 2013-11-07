@@ -11,19 +11,36 @@
 </div>
 <h1>Jobs</h1>
 <table class="table">
+	<colgroup>
+		<col style="width: 65%">
+		<col style="width: 15%">
+		<col style="width: 10%">
+		<col style="width: 10%">
+		<col style="width: 0">
+	</colgroup>
 	<thead>
 	<tr>
 		<th>Job</th>
-		<th>Tasks</th>
 		<th>Status</th>
+		<th>Triggers</th>
+		<th>Tasks</th>
 		<th>Execute</th>
 	</tr>
 	</thead>
 	<tbody>
 	<tr ng-repeat="job in jobs">
 		<td><a href="/#/jobs/{{ job.name }}">{{ job.name }}</a></td>
-		<td><span class="badge badge-inverse">{{ job.tasks.length }}</span></td>
 		<td>{{ job.status }}</td>
+		<td>
+			<div class="badge badge-inverse" tooltip="{{job.triggers|join}}">
+				{{ job.triggers.length || 0}}
+			</div>
+		</td>
+		<td>
+			<div class="badge badge-inverse" tooltip="{{job.tasks|join}}">
+				{{ job.tasks.length || 0 }}
+			</div>
+		</td>
 		<td>
 			<button ng-click="quickRun('{{job.name}}')" class="btn">
 				<i class="icon-play"></i>

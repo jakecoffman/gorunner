@@ -1,0 +1,3 @@
+th:not(:first-child), td:not(:first-child) {
+    text-align: center;
+}

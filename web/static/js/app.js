@@ -1,4 +1,4 @@
-var app = angular.module("GoRunnerApp", [], function ($routeProvider) {
+var app = angular.module("GoRunnerApp", ['ui.bootstrap'], function ($routeProvider) {
 	$routeProvider.when('/jobs', {
 		title: "jobs",
 		templateUrl: '/static/templates/jobs.html',
@@ -42,6 +42,15 @@ var app = angular.module("GoRunnerApp", [], function ($routeProvider) {
 	.otherwise({
 		redirectTo: '/jobs'
 	});
+});
+
+app.filter('join', function(){
+	return function(input) {
+		if(input)
+			return input.join(', ');
+		else
+			return "";
+	};
 });
 
 app.run(['$location', '$rootScope', function($location, $rootScope) {
