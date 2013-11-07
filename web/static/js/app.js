@@ -63,10 +63,10 @@ app.run(['$location', '$rootScope', function($location, $rootScope) {
 
 app.factory('gorunner', function($http){
 	return {
-		getRecentRuns: function (success, failure) {
+		listRuns: function (offset, length, success, failure) {
 			$http({
 				method: "GET",
-				url: "/runs"
+				url: "/runs?offset=" + offset + "&length=" + length
 			})
 			.success(success)
 			.error(failure)
@@ -176,15 +176,6 @@ app.factory('gorunner', function($http){
 			.error(failure);
 		},
 
-		listRuns: function(success, failure) {
-			$http({
-				method: "GET",
-				url: "/runs"
-			})
-			.success(success)
-			.error(failure);
-		},
-
 		getRun: function(run, success, failure) {
 			$http({
 				method: "GET",
@@ -253,16 +244,23 @@ app.factory('gorunner', function($http){
 	}
 });
 
-app.controller('MainCtl', function ($scope, gorunner) {
+app.controller('MainCtl', function ($scope, $timeout, gorunner) {
 	$scope.refreshRuns = function() {
-		gorunner.getRecentRuns(function(data){
+		gorunner.listRuns(0, 20, function(data){
 			$scope.recent = data;
 		}, function(data) {
 			$scope.recent = [];
 		});
 	};
 
-	$scope.refreshRuns();
+	$scope.refreshRunsEvery = function(millis) {
+		$scope.refreshRuns();
+		$timeout(function(){
+			$scope.refreshRunsEvery(millis);
+		}, millis);
+	};
+
+	$scope.refreshRunsEvery(2000);
 });
 
 function JobsCtl($scope, gorunner) {
@@ -398,7 +396,7 @@ function TaskCtl($scope, $routeParams, gorunner) {
 }
 
 function RunsCtl($scope, gorunner) {
-	gorunner.listRuns(function(data) {
+	gorunner.listRuns("", "", function(data) {
 		$scope.runs = data;
 	}, function(data) {
 		alert("Failed to list runs");

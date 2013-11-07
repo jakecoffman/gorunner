@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sort"
+	"strconv"
 )
 
 type Reverse struct {
@@ -29,8 +30,43 @@ func (r Reverse) Less(i, j int) bool {
 func ListRuns(w http.ResponseWriter, r *http.Request) {
 	runsList := models.GetRunList()
 
+	offset := r.FormValue("offset")
+	length := r.FormValue("length")
+
+	o, err := strconv.Atoi(offset)
+	if offset != "" && err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	l, err := strconv.Atoi(length)
+	if length != "" && err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	sort.Sort(Reverse{runsList})
-	w.Write([]byte(models.Json(runsList)))
+
+	list := runsList.GetList()
+	if offset != "" {
+		if length != "" {
+			list = list[o : o+l]
+		} else {
+			list = list[o:]
+		}
+	} else {
+		if length != "" {
+			list = list[:l]
+		}
+	}
+
+	bytes, err := json.Marshal(list)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Write([]byte(bytes))
 }
 
 func AddRun(w http.ResponseWriter, r *http.Request) {
