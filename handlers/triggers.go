@@ -96,7 +96,7 @@ func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
 
 	t := trigger.(models.Trigger)
 	t.Schedule = payload.Cron
-	executor.AddTrigger <- t
+	executor.AddTrigger(t)
 	err = models.Update(triggerList, t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

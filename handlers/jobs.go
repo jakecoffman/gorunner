@@ -180,7 +180,7 @@ func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	executor.AddTrigger <- t.(models.Trigger)
+	executor.AddTrigger(t.(models.Trigger))
 	models.Update(jobList, j)
 
 	w.WriteHeader(201)
@@ -197,6 +197,28 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 	}
 	j := job.(models.Job)
 
-	j.DeleteTrigger(vars["trigger"])
+	t := vars["trigger"]
+	j.DeleteTrigger(t)
+
+	// If Trigger is no longer attached to any Jobs, remove it from Cron
+	found := false
+	for _, job := range jobList.GetList() {
+		// Exclude this job because we just removed it. Kind of a race.
+		if job.Name == j.Name {
+			continue
+		}
+
+		for _, trigger := range job.Triggers {
+			if trigger == t {
+				found = true
+				break
+			}
+		}
+	}
+
+	if found == false {
+		executor.RemoveTrigger(t)
+	}
+
 	models.Update(jobList, j)
 }
