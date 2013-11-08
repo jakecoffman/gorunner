@@ -137,6 +137,10 @@ class TestGoAPI(unittest.TestCase):
             self.api.delete_task(self.test_task)
         except:
             pass
+        try:
+            self.api.delete_trigger(self.test_trigger)
+        except:
+            pass
 
     def test_jobs(self):
         self.crud_test(self.api.list_job_names, self.api.delete_job, self.api.add_job, self.api.get_job)

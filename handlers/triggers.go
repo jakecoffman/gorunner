@@ -1,21 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/executor"
 	"github.com/jakecoffman/gorunner/models"
-	"io/ioutil"
 	"net/http"
 )
-
-type addTriggerPayload struct {
-	Name string `json:"name"`
-}
-
-type updateTriggerPayload struct {
-	Cron string `json:"cron"`
-}
 
 func ListTriggers(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
@@ -27,24 +17,9 @@ func ListTriggers(w http.ResponseWriter, r *http.Request) {
 func AddTrigger(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "name", w)
 
-	var payload addTriggerPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Name == "" {
-		http.Error(w, "Please provide a 'name'", http.StatusBadRequest)
-		return
-	}
-
-	trigger := models.Trigger{Name: payload.Name}
+	trigger := models.Trigger{Name: payload["name"]}
 	models.Append(triggerList, trigger)
 	w.WriteHeader(201)
 }
@@ -59,12 +34,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bytes, err := json.Marshal(trigger)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.Write(bytes)
+	marshal(trigger, w)
 }
 
 func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
@@ -77,25 +47,10 @@ func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var payload updateTriggerPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Cron == "" {
-		http.Error(w, "Please provide a 'cron'", http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "cron", w)
 
 	t := trigger.(models.Trigger)
-	t.Schedule = payload.Cron
+	t.Schedule = payload["cron"]
 	executor.AddTrigger(t)
 	err = models.Update(triggerList, t)
 	if err != nil {

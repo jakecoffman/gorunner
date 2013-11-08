@@ -1,26 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/executor"
 	"github.com/jakecoffman/gorunner/models"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 )
-
-type addJobPayload struct {
-	Name string `json:"name"`
-}
-
-type addTaskToJobPayload struct {
-	Task string `json:"task"`
-}
-
-type addTriggerToJobPayload struct {
-	Trigger string `json:"trigger"`
-}
 
 func ListJobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
@@ -31,24 +17,9 @@ func ListJobs(w http.ResponseWriter, r *http.Request) {
 func AddJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "name", w)
 
-	var payload addJobPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Name == "" {
-		http.Error(w, "Please provide a 'name'", http.StatusBadRequest)
-		return
-	}
-
-	err = models.Append(jobList, models.Job{Name: payload.Name, Status: "New"})
+	err := models.Append(jobList, models.Job{Name: payload["name"], Status: "New"})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -67,12 +38,7 @@ func GetJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bytes, err := json.Marshal(job)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.Write(bytes)
+	marshal(job, w)
 }
 
 func DeleteJob(w http.ResponseWriter, r *http.Request) {
@@ -103,23 +69,8 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 	}
 	j := job.(models.Job)
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var payload addTaskToJobPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Task == "" {
-		http.Error(w, "Please provide a 'task' to add to "+j.Name, http.StatusBadRequest)
-		return
-	}
-	j.AppendTask(payload.Task)
+	payload := unmarshal(r.Body, "task", w)
+	j.AppendTask(payload["task"])
 	models.Update(jobList, j)
 
 	w.WriteHeader(201)
@@ -156,26 +107,11 @@ func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 	}
 	j := job.(models.Job)
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "trigger", w)
 
-	var payload addTriggerToJobPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Trigger == "" {
-		http.Error(w, "Please provide a 'trigger' to add to "+j.Name, http.StatusBadRequest)
-		return
-	}
-
-	j.AppendTrigger(payload.Trigger)
+	j.AppendTrigger(payload["trigger"])
 	triggerList := models.GetTriggerList()
-	t, err := models.Get(triggerList, payload.Trigger)
+	t, err := models.Get(triggerList, payload["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

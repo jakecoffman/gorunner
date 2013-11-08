@@ -4,17 +4,10 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/models"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
-
-type addTaskPayload struct {
-	Name string `json:"name"`
-}
-
-type updateTaskPayload struct {
-	Script string `json:"script"`
-}
 
 func ListTasks(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
@@ -26,24 +19,9 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 func AddTask(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "name", w)
 
-	var payload addTaskPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Name == "" {
-		http.Error(w, "Please provide a 'name'", http.StatusBadRequest)
-		return
-	}
-
-	models.Append(taskList, models.Task{payload.Name, ""})
+	models.Append(taskList, models.Task{payload["name"], ""})
 	w.WriteHeader(201)
 }
 
@@ -57,12 +35,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bytes, err := json.Marshal(task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.Write(bytes)
+	marshal(task, w)
 }
 
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
@@ -75,25 +48,10 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var payload updateTaskPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Script == "" {
-		http.Error(w, "Please provide a 'script'", http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "script", w)
 
 	t := task.(models.Task)
-	t.Script = payload.Script
+	t.Script = payload["script"]
 	models.Update(taskList, t)
 }
 
@@ -108,4 +66,34 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	models.Delete(taskList, task.ID())
+}
+
+func marshal(item interface{}, w http.ResponseWriter) {
+	bytes, err := json.Marshal(item)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Write(bytes)
+}
+
+func unmarshal(r io.Reader, k string, w http.ResponseWriter) (payload map[string]string) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(data, &payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if payload[k] == "" {
+		http.Error(w, "Please provide a '"+k+"'", http.StatusBadRequest)
+		return
+	}
+
+	return
 }

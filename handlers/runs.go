@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/nu7hatch/gouuid"
-	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
@@ -13,14 +11,6 @@ import (
 
 type Reverse struct {
 	sort.Interface
-}
-
-type addRunPayload struct {
-	Job string `json:"job"`
-}
-
-type addRunResponse struct {
-	Uuid string `json:"uuid"`
 }
 
 func (r Reverse) Less(i, j int) bool {
@@ -60,13 +50,7 @@ func ListRuns(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	bytes, err := json.Marshal(list)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	w.Write([]byte(bytes))
+	marshal(list, w)
 }
 
 func AddRun(w http.ResponseWriter, r *http.Request) {
@@ -74,24 +58,9 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 	jobsList := models.GetJobList()
 	tasksList := models.GetTaskList()
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	payload := unmarshal(r.Body, "job", w)
 
-	var payload addRunPayload
-	err = json.Unmarshal(data, &payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if payload.Job == "" {
-		http.Error(w, "Please provide a 'job' to run", http.StatusBadRequest)
-		return
-	}
-
-	job, err := models.Get(jobsList, payload.Job)
+	job, err := models.Get(jobsList, payload["job"])
 	j := job.(models.Job)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -119,15 +88,10 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var idResponse addRunResponse
-	idResponse.Uuid = id.String()
-	data, err = json.Marshal(idResponse)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	idResponse := make(map[string]string)
+	idResponse["uuid"] = id.String()
 	w.WriteHeader(201)
-	w.Write(data)
+	marshal(idResponse, w)
 }
 
 func GetRun(w http.ResponseWriter, r *http.Request) {
@@ -140,10 +104,5 @@ func GetRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bytes, err := json.Marshal(run)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.Write(bytes)
+	marshal(run, w)
 }
