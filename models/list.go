@@ -29,11 +29,6 @@ func (l list) Get(id string) (elementer, error) {
 	return nil, errors.New(fmt.Sprintf("Thing '%s' not found", id))
 }
 
-// TODO: REMOVE
-func (l list) GetAll() []elementer {
-	return l.elements
-}
-
 func (l list) Update(e elementer) error {
 	l.Lock()
 	defer l.Unlock()
@@ -86,11 +81,11 @@ func (l *list) Delete(id string) error {
 	return nil
 }
 
-func (l list) Json() string {
+func (l list) Json() []byte {
 	l.RLock()
 	defer l.RUnlock()
 
-	return string(l.dumps())
+	return l.dumps()
 }
 
 func (l list) save() {
@@ -103,21 +98,6 @@ func (l list) dumps() []byte {
 		panic(err)
 	}
 	return bytes
-}
-
-func (l list) getPosition(id string) (int, error) {
-	var found bool
-	var position int
-	for i, e := range l.elements {
-		if id == e.ID() {
-			position = i
-			found = true
-		}
-	}
-	if !found {
-		return -1, errors.New("Couldn't find " + id)
-	}
-	return position, nil
 }
 
 func (l list) pos(id string) (int, error) {

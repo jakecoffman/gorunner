@@ -23,39 +23,28 @@ func ListRuns(w http.ResponseWriter, r *http.Request) {
 	offset := r.FormValue("offset")
 	length := r.FormValue("length")
 
+	if offset == "" {
+		offset = "-1"
+	}
+	if length == "" {
+		length = "-1"
+	}
+
 	o, err := strconv.Atoi(offset)
-	if offset != "" && err != nil {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	l, err := strconv.Atoi(length)
-	if length != "" && err != nil {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	sort.Sort(Reverse{runsList})
-
-	list := runsList.GetAll()
-	if offset != "" {
-		if o >= len(list) {
-			list = nil
-			marshal(list, w)
-			return
-		}
-		if length != "" && o+l < len(list) {
-			list = list[o : o+l]
-		} else {
-			list = list[o:]
-		}
-	} else {
-		if length != "" {
-			list = list[:l]
-		}
-	}
-
-	marshal(list, w)
+	recent := runsList.GetRecent(o, l)
+	marshal(recent, w)
 }
 
 func AddRun(w http.ResponseWriter, r *http.Request) {

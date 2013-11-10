@@ -67,6 +67,25 @@ func (l RunList) Swap(i, j int) {
 	l.elements[i], l.elements[j] = l.elements[j], l.elements[i]
 }
 
+func (l RunList) GetRecent(offset, length int) []elementer {
+	runs := l.elements
+	if offset != -1 {
+		if offset >= len(runs) {
+			return nil
+		}
+		if length != -1 && offset+length < len(runs) {
+			runs = runs[offset : offset+length]
+		} else {
+			runs = runs[offset:]
+		}
+	} else {
+		if length != -1 {
+			runs = runs[:length]
+		}
+	}
+	return runs
+}
+
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	run := Run{UUID: UUID, Job: job, Tasks: tasks, Start: time.Now(), Status: "New"}
 	var found bool = false

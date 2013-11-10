@@ -29,15 +29,10 @@ func RemoveTrigger(name string) {
 // Walks through each job, seeing if the trigger who's turn it is to execute is attached. Executes those jobs.
 func findAndRun(t models.Trigger) {
 	jobList := models.GetJobList()
-	for _, job := range jobList.GetAll() {
-		j := job.(models.Job)
-		for _, trigger := range j.Triggers {
-			if trigger == t.ID() {
-				fmt.Println("Running job " + j.Name)
-				runnit(j)
-				break
-			}
-		}
+	jobs := jobList.GetJobsWithTrigger(t.ID())
+	for _, job := range jobs {
+		println("Executing job " + job.Name)
+		runnit(job)
 	}
 }
 

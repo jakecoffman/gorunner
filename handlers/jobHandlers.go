@@ -9,9 +9,7 @@ import (
 )
 
 func ListJobs(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
-
-	w.Write([]byte(jobList.Json()))
+	w.Write([]byte(models.GetJobList().Json()))
 }
 
 func AddJob(w http.ResponseWriter, r *http.Request) {
@@ -134,27 +132,12 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 
 	t := vars["trigger"]
 	j.DeleteTrigger(t)
+	jobList.Update(j)
 
-	// If Trigger is no longer attached to any Jobs, remove it from Cron
-	found := false
-	for _, e := range jobList.GetAll() {
-		job := e.(models.Job)
-		// Exclude this job because we just removed it. Kind of a race.
-		if job.Name == j.Name {
-			continue
-		}
+	// If Trigger is no longer attached to any Jobs, remove it from Cron to save cycles
+	jobs := jobList.GetJobsWithTrigger(t)
 
-		for _, trigger := range job.Triggers {
-			if trigger == t {
-				found = true
-				break
-			}
-		}
-	}
-
-	if found == false {
+	if len(jobs) == 0 {
 		executor.RemoveTrigger(t)
 	}
-
-	jobList.Update(j)
 }

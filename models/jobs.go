@@ -62,3 +62,15 @@ func (l *JobList) Load() {
 		l.elements = append(l.elements, job)
 	}
 }
+
+func (l *JobList) GetJobsWithTrigger(triggerName string) (jobs []Job) {
+	for _, e := range l.elements {
+		job := e.(Job)
+		for _, trigger := range job.Triggers {
+			if trigger == triggerName {
+				jobs = append(jobs, job)
+			}
+		}
+	}
+	return
+}
