@@ -72,3 +72,10 @@ func ListJobsForTrigger(w http.ResponseWriter, r *http.Request) {
 	jobs := jobList.GetJobsWithTrigger(vars["trigger"])
 	marshal(jobs, w)
 }
+
+func ListJobsForTask(w http.ResponseWriter, r *http.Request) {
+	jobList := models.GetJobList()
+	vars := mux.Vars(r)
+	jobs := jobList.GetJobsWithTask(vars["task"])
+	marshal(jobs, w)
+}

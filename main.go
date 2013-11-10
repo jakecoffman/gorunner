@@ -47,6 +47,7 @@ func main() {
 	r.HandleFunc("/tasks/{task}", handlers.GetTask).Methods("GET")
 	r.HandleFunc("/tasks/{task}", handlers.UpdateTask).Methods("PUT")
 	r.HandleFunc("/tasks/{task}", handlers.DeleteTask).Methods("DELETE")
+	r.HandleFunc("/tasks/{task}/jobs", handlers.ListJobsForTask).Methods("GET")
 
 	r.HandleFunc("/runs", handlers.ListRuns).Methods("GET")
 	r.HandleFunc("/runs", handlers.AddRun).Methods("POST")

@@ -74,3 +74,15 @@ func (l *JobList) GetJobsWithTrigger(triggerName string) (jobs []Job) {
 	}
 	return
 }
+
+func (l *JobList) GetJobsWithTask(taskName string) (jobs []Job) {
+	for _, e := range l.elements {
+		job := e.(Job)
+		for _, task := range job.Tasks {
+			if task == taskName {
+				jobs = append(jobs, job)
+			}
+		}
+	}
+	return
+}

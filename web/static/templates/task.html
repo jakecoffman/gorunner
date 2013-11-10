@@ -2,3 +2,9 @@
 <textarea ng-model="task.script"></textarea>
 <hr/>
 <button class="btn" ng-click="saveTask()">Save</button>
+<h3>Bindings</h3>
+<p ng-hide="jobs">This task is not bound to any jobs.</p>
+<p ng-show="jobs">This task is bound to the following jobs:</p>
+<ul>
+	<li ng-repeat="job in jobs"><a href="/#/jobs/{{job.name}}">{{job.name}}</a></li>
+</ul>

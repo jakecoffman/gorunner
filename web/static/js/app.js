@@ -176,6 +176,15 @@ app.factory('gorunner', function($http){
 			.error(failure);
 		},
 
+		listJobsForTask: function(task, success, failure) {
+			$http({
+				method: "GET",
+				url: "/tasks/" + task + "/jobs"
+			})
+			.success(success)
+			.error(failure);
+		},
+
 		getRun: function(run, success, failure) {
 			$http({
 				method: "GET",
@@ -401,7 +410,13 @@ function TaskCtl($scope, $routeParams, gorunner) {
 		}, function(){
 			alert("Save failed");
 		})
-	}
+	};
+
+	gorunner.listJobsForTask($routeParams.task, function(data){
+		$scope.jobs = data;
+	}, function() {
+		alert("Failed to get jobs for task " + $routeParams.task);
+	})
 }
 
 function RunsCtl($scope, gorunner) {
