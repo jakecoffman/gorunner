@@ -60,27 +60,21 @@
 	<thead>
 	<tr>
 		<th>Name</th>
+		<th>Order</th>
 		<th>Remove</th>
-		<th>Sooner</th>
-		<th>Later</th>
 	</tr>
 	</thead>
 	<tbody>
 	<tr ng-repeat="task in job.tasks track by $index">
 		<td><a href="/#/tasks/{{ task }}">{{ task }}</a></td>
 		<td>
-			<button class="btn" ng-click="removeTask($index)">
-				<i class="icon-remove"></i>
-			</button>
-		</td>
-		<td>
 			<button class="btn">
 				<i class="icon-arrow-up"></i>
 			</button>
 		</td>
 		<td>
-			<button class="btn">
-				<i class="icon-arrow-down"></i>
+			<button class="btn" ng-click="removeTask($index)">
+				<i class="icon-remove"></i>
 			</button>
 		</td>
 	</tr>
