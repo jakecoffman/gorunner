@@ -240,6 +240,15 @@ app.factory('gorunner', function($http){
 			})
 			.success(success)
 			.error(failure);
+		},
+
+		listJobsForTrigger: function(trigger, success, failure) {
+			$http({
+				method: "GET",
+				url: "/triggers/" + trigger + "/jobs"
+			})
+			.success(success)
+			.error(failure);
 		}
 	}
 });
@@ -460,4 +469,11 @@ function TriggerCtl($scope, $routeParams, gorunner) {
 			alert("Failed to save trigger");
 		})
 	};
+
+	gorunner.listJobsForTrigger($routeParams.trigger, function(data){
+		$scope.jobs = data;
+	}, function() {
+		alert("Failed to get jobs for trigger " + $routeParams.trigger);
+	})
+
 }

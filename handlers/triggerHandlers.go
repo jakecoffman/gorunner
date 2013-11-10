@@ -65,3 +65,10 @@ func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
 
 	triggerList.Delete(vars["trigger"])
 }
+
+func ListJobsForTrigger(w http.ResponseWriter, r *http.Request) {
+	jobList := models.GetJobList()
+	vars := mux.Vars(r)
+	jobs := jobList.GetJobsWithTrigger(vars["trigger"])
+	marshal(jobs, w)
+}

@@ -57,6 +57,7 @@ func main() {
 	r.HandleFunc("/triggers/{trigger}", handlers.GetTrigger).Methods("GET")
 	r.HandleFunc("/triggers/{trigger}", handlers.UpdateTrigger).Methods("PUT")
 	r.HandleFunc("/triggers/{trigger}", handlers.DeleteTrigger).Methods("DELETE")
+	r.HandleFunc("/triggers/{trigger}/jobs", handlers.ListJobsForTrigger).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
 
