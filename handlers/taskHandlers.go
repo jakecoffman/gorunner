@@ -23,7 +23,6 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	taskList.Save()
 	w.WriteHeader(201)
 }
 
@@ -55,7 +54,6 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	t := task.(models.Task)
 	t.Script = payload["script"]
 	taskList.Update(t)
-	taskList.Save()
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
@@ -69,5 +67,4 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	taskList.Delete(task.ID())
-	taskList.Save()
 }

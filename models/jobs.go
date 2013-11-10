@@ -50,20 +50,6 @@ type JobList struct {
 	list
 }
 
-func (l JobList) Save() {
-	var jobs []Job
-
-	for _, e := range l.elements {
-		jobs = append(jobs, e.(Job))
-	}
-
-	bytes, err := json.Marshal(jobs)
-	if err != nil {
-		panic(err)
-	}
-	writeFile(bytes, l.fileName)
-}
-
 func (l *JobList) Load() {
 	bytes := readFile(l.fileName)
 	var jobs []Job

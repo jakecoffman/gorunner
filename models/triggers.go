@@ -17,20 +17,6 @@ type TriggerList struct {
 	list
 }
 
-func (l TriggerList) Save() {
-	var triggers []Trigger
-
-	for _, e := range l.elements {
-		triggers = append(triggers, e.(Trigger))
-	}
-
-	bytes, err := json.Marshal(triggers)
-	if err != nil {
-		panic(err)
-	}
-	writeFile(bytes, l.fileName)
-}
-
 func (l *TriggerList) Load() {
 	bytes := readFile(l.fileName)
 	var triggers []Trigger

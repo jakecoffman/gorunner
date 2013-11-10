@@ -21,7 +21,6 @@ func AddTrigger(w http.ResponseWriter, r *http.Request) {
 
 	trigger := models.Trigger{Name: payload["name"]}
 	triggerList.Append(trigger)
-	triggerList.Save()
 	w.WriteHeader(201)
 }
 
@@ -57,7 +56,6 @@ func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	triggerList.Save()
 }
 
 func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
@@ -66,5 +64,4 @@ func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	triggerList.Delete(vars["trigger"])
-	triggerList.Save()
 }

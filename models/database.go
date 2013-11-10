@@ -47,11 +47,6 @@ func GetTriggerList() *TriggerList {
 	return &triggerList
 }
 
-type Serializable interface {
-	dumps() string
-	loads(s string)
-}
-
 func writeFile(bytes []byte, filePath string) {
 	err := ioutil.WriteFile(filePath, bytes, 0644)
 	if err != nil {

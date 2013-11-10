@@ -44,6 +44,7 @@ func (l list) Update(e elementer) error {
 	}
 
 	l.elements[position] = e
+	l.save()
 	return nil
 }
 
@@ -60,6 +61,7 @@ func (l *list) Append(e elementer) error {
 		return errors.New("Job with that id found in list")
 	}
 	l.elements = append(l.elements, e)
+	l.save()
 	return nil
 }
 
@@ -80,6 +82,7 @@ func (l *list) Delete(id string) error {
 		return errors.New("Thing not found for deletion")
 	}
 	l.elements = l.elements[:i+copy(l.elements[i:], l.elements[i+1:])]
+	l.save()
 	return nil
 }
 
@@ -87,15 +90,19 @@ func (l list) Json() string {
 	l.RLock()
 	defer l.RUnlock()
 
-	return l.dumps()
+	return string(l.dumps())
 }
 
-func (l list) dumps() string {
+func (l list) save() {
+	writeFile(l.dumps(), l.fileName)
+}
+
+func (l list) dumps() []byte {
 	bytes, err := json.Marshal(l.elements)
 	if err != nil {
 		panic(err)
 	}
-	return string(bytes)
+	return bytes
 }
 
 func (l list) getPosition(id string) (int, error) {

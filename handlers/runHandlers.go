@@ -92,7 +92,6 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	runsList.Save()
 
 	idResponse := make(map[string]string)
 	idResponse["uuid"] = id.String()

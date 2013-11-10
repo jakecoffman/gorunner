@@ -24,8 +24,6 @@ func AddJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	jobList.Save()
-
 	w.WriteHeader(201)
 }
 
@@ -57,7 +55,6 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	jobList.Save()
 }
 
 func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +71,6 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 	payload := unmarshal(r.Body, "task", w)
 	j.AppendTask(payload["task"])
 	jobList.Update(j)
-	jobList.Save()
 
 	w.WriteHeader(201)
 }
@@ -97,7 +93,6 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 	}
 	j.DeleteTask(taskPosition)
 	jobList.Update(j)
-	jobList.Save()
 }
 
 func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +117,6 @@ func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 	}
 	executor.AddTrigger(t.(models.Trigger))
 	jobList.Update(j)
-	jobList.Save()
 
 	w.WriteHeader(201)
 }
@@ -163,5 +157,4 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jobList.Update(j)
-	jobList.Save()
 }

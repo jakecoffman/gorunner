@@ -17,20 +17,6 @@ type TaskList struct {
 	list
 }
 
-func (l TaskList) Save() {
-	var tasks []Task
-
-	for _, e := range l.elements {
-		tasks = append(tasks, e.(Task))
-	}
-
-	bytes, err := json.Marshal(tasks)
-	if err != nil {
-		panic(err)
-	}
-	writeFile(bytes, l.fileName)
-}
-
 func (l *TaskList) Load() {
 	bytes := readFile(l.fileName)
 	var tasks []Task

@@ -33,19 +33,6 @@ type RunList struct {
 	list
 }
 
-func (l RunList) Save() {
-	var runs []Run
-	for _, e := range l.elements {
-		runs = append(runs, e.(Run))
-	}
-
-	bytes, err := json.Marshal(runs)
-	if err != nil {
-		panic(err)
-	}
-	writeFile(bytes, l.fileName)
-}
-
 func (l *RunList) Load() {
 	bytes := readFile(l.fileName)
 	var runs []Run
@@ -96,7 +83,7 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 
 	j.elements = append(j.elements, run)
 	go j.execute(&run)
-	j.Save()
+	j.save()
 	return nil
 }
 
@@ -106,7 +93,6 @@ func (l *RunList) execute(r *Run) {
 		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
 		result := &r.Results[len(r.Results)-1]
 		l.Update(*r)
-		l.Save()
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
 		result.Output = string(out)
@@ -116,7 +102,6 @@ func (l *RunList) execute(r *Run) {
 			r.Status = "Failed"
 			r.End = time.Now()
 			l.Update(*r)
-			l.Save()
 			jobList := GetJobList()
 			job, err := jobList.Get(r.Job.Name)
 			if err != nil {
@@ -125,11 +110,9 @@ func (l *RunList) execute(r *Run) {
 			j := job.(Job)
 			j.Status = "Failing"
 			jobList.Update(job)
-			jobList.Save()
 			return
 		}
 		l.Update(*r)
-		l.Save()
 	}
 	r.End = time.Now()
 	r.Status = "Done"
@@ -141,7 +124,5 @@ func (l *RunList) execute(r *Run) {
 	j := job.(Job)
 	j.Status = "Ok"
 	jobList.Update(job)
-	jobList.Save()
 	l.Update(*r)
-	l.Save()
 }
