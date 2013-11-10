@@ -11,8 +11,17 @@ import (
 
 const port = ":8090"
 
+var r *mux.Router
+
 func app(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "web/angular/app.html")
+}
+
+func gateway(w http.ResponseWriter, req *http.Request) {
+	// Before
+	r.ServeHTTP(w, req)
+	// After
+	fmt.Printf("%s %s %s\n", req.RemoteAddr, req.Method, req.URL)
 }
 
 func main() {
@@ -21,7 +30,6 @@ func main() {
 
 	server := &http.Server{Addr: port, Handler: nil}
 
-	r := mux.NewRouter()
 	r = mux.NewRouter()
 
 	r.HandleFunc("/", app)
@@ -50,8 +58,9 @@ func main() {
 	r.HandleFunc("/triggers/{trigger}", handlers.UpdateTrigger).Methods("PUT")
 	r.HandleFunc("/triggers/{trigger}", handlers.DeleteTrigger).Methods("DELETE")
 
-	http.Handle("/", r)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
+	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
+
+	http.HandleFunc("/", gateway)
 
 	go func() {
 		for {
