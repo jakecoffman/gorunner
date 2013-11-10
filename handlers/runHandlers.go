@@ -37,9 +37,14 @@ func ListRuns(w http.ResponseWriter, r *http.Request) {
 
 	sort.Sort(Reverse{runsList})
 
-	list := runsList.GetList()
+	list := runsList.GetAll()
 	if offset != "" {
-		if length != "" {
+		if o >= len(list) {
+			list = nil
+			marshal(list, w)
+			return
+		}
+		if length != "" && o+l < len(list) {
 			list = list[o : o+l]
 		} else {
 			list = list[o:]
@@ -60,7 +65,7 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 
 	payload := unmarshal(r.Body, "job", w)
 
-	job, err := models.Get(jobsList, payload["job"])
+	job, err := jobsList.Get(payload["job"])
 	j := job.(models.Job)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -75,7 +80,7 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 
 	var tasks []models.Task
 	for _, taskName := range j.Tasks {
-		task, err := models.Get(tasksList, taskName)
+		task, err := tasksList.Get(taskName)
 		if err != nil {
 			panic(err)
 		}
@@ -87,6 +92,7 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	runsList.Save()
 
 	idResponse := make(map[string]string)
 	idResponse["uuid"] = id.String()
@@ -98,7 +104,7 @@ func GetRun(w http.ResponseWriter, r *http.Request) {
 	runList := models.GetRunList()
 
 	vars := mux.Vars(r)
-	run, err := models.Get(runList, vars["run"])
+	run, err := runList.Get(vars["run"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

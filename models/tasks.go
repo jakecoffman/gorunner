@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"sync"
 )
 
 type Task struct {
@@ -15,46 +14,32 @@ func (t Task) ID() string {
 }
 
 type TaskList struct {
-	tasks []Task
-	sync.RWMutex
+	list
 }
 
-func (t TaskList) GetList() []Task {
-	return t.tasks
-}
-
-func (t TaskList) getList() []Elementer {
-	var elements []Elementer
-	for _, task := range t.tasks {
-		elements = append(elements, task)
-	}
-	return elements
-}
-
-func (t *TaskList) setList(e []Elementer) {
+func (l TaskList) Save() {
 	var tasks []Task
-	for _, task := range e {
-		t := task.(Task)
-		tasks = append(tasks, t)
+
+	for _, e := range l.elements {
+		tasks = append(tasks, e.(Task))
 	}
-	t.tasks = tasks
-}
 
-func (t *TaskList) save() {
-	Save(t, tasksFile)
-}
-
-func (t TaskList) dumps() string {
-	bytes, err := json.Marshal(t.tasks)
+	bytes, err := json.Marshal(tasks)
 	if err != nil {
 		panic(err)
 	}
-	return string(bytes)
+	writeFile(bytes, l.fileName)
 }
 
-func (t *TaskList) loads(s string) {
-	err := json.Unmarshal([]byte(s), &t.tasks)
+func (l *TaskList) Load() {
+	bytes := readFile(l.fileName)
+	var tasks []Task
+	err := json.Unmarshal([]byte(string(bytes)), &tasks)
 	if err != nil {
 		panic(err)
+	}
+	l.elements = nil
+	for _, task := range tasks {
+		l.elements = append(l.elements, task)
 	}
 }

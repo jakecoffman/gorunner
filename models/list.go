@@ -1,76 +1,76 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 )
 
-type Elementer interface {
+type elementer interface {
 	ID() string
 }
 
-type List interface {
-	RLock()
-	RUnlock()
-	Lock()
-	Unlock()
-	getList() []Elementer
-	setList([]Elementer)
-	save()
-	dumps() string
+type list struct {
+	elements []elementer
+	fileName string
+	sync.RWMutex
 }
 
-func Get(l List, id string) (Elementer, error) {
+func (l list) Get(id string) (elementer, error) {
 	l.RLock()
 	defer l.RUnlock()
 
-	list := l.getList()
-	for _, job := range list {
-		if job.ID() == id {
-			return job, nil
+	for _, e := range l.elements {
+		if e.ID() == id {
+			return e, nil
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("Thing '%s' not found", id))
 }
 
-func Update(l List, e Elementer) error {
+// TODO: REMOVE
+func (l list) GetAll() []elementer {
+	return l.elements
+}
+
+func (l list) Update(e elementer) error {
 	l.Lock()
 	defer l.Unlock()
 
-	position, err := getPosition(l, e.ID())
+	position, err := l.pos(e.ID())
 	if err != nil {
 		return err
 	}
 
-	things := l.getList()
-	things[position] = e
-	l.setList(things)
-	l.save()
+	l.elements[position] = e
 	return nil
 }
 
-func Append(l List, e Elementer) error {
+func (l *list) Append(e elementer) error {
 	l.Lock()
 	defer l.Unlock()
 
-	_, err := getPosition(l, e.ID())
+	if e.ID() == "" {
+		return errors.New("No ID provided")
+	}
+
+	_, err := l.pos(e.ID())
 	if err == nil {
 		return errors.New("Job with that id found in list")
 	}
-	l.setList(append(l.getList(), e))
-	l.save()
+	l.elements = append(l.elements, e)
 	return nil
 }
 
-func Delete(l List, id string) error {
+func (l *list) Delete(id string) error {
 	l.Lock()
 	defer l.Unlock()
 
-	list := l.getList()
 	var found bool = false
 	var i int
-	var thing Elementer
-	for i, thing = range list {
+	var thing elementer
+	for i, thing = range l.elements {
 		if thing.ID() == id {
 			found = true
 			break
@@ -79,23 +79,29 @@ func Delete(l List, id string) error {
 	if !found {
 		return errors.New("Thing not found for deletion")
 	}
-	list = list[:i+copy(list[i:], list[i+1:])]
-	l.setList(list)
-	l.save()
+	l.elements = l.elements[:i+copy(l.elements[i:], l.elements[i+1:])]
 	return nil
 }
 
-func Json(l List) string {
+func (l list) Json() string {
 	l.RLock()
 	defer l.RUnlock()
 
 	return l.dumps()
 }
 
-func getPosition(l List, id string) (int, error) {
+func (l list) dumps() string {
+	bytes, err := json.Marshal(l.elements)
+	if err != nil {
+		panic(err)
+	}
+	return string(bytes)
+}
+
+func (l list) getPosition(id string) (int, error) {
 	var found bool
 	var position int
-	for i, e := range l.getList() {
+	for i, e := range l.elements {
 		if id == e.ID() {
 			position = i
 			found = true
@@ -105,4 +111,13 @@ func getPosition(l List, id string) (int, error) {
 		return -1, errors.New("Couldn't find " + id)
 	}
 	return position, nil
+}
+
+func (l list) pos(id string) (int, error) {
+	for i, e := range l.elements {
+		if e.ID() == id {
+			return i, nil
+		}
+	}
+	return -1, errors.New("not found")
 }

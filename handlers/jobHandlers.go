@@ -11,7 +11,7 @@ import (
 func ListJobs(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
-	w.Write([]byte(models.Json(jobList)))
+	w.Write([]byte(jobList.Json()))
 }
 
 func AddJob(w http.ResponseWriter, r *http.Request) {
@@ -19,11 +19,12 @@ func AddJob(w http.ResponseWriter, r *http.Request) {
 
 	payload := unmarshal(r.Body, "name", w)
 
-	err := models.Append(jobList, models.Job{Name: payload["name"], Status: "New"})
+	err := jobList.Append(models.Job{Name: payload["name"], Status: "New"})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	jobList.Save()
 
 	w.WriteHeader(201)
 }
@@ -32,7 +33,7 @@ func GetJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := models.Get(jobList, vars["job"])
+	job, err := jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -45,24 +46,25 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := models.Get(jobList, vars["job"])
+	job, err := jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	err = models.Delete(jobList, job.ID())
+	err = jobList.Delete(job.ID())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	jobList.Save()
 }
 
 func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := models.Get(jobList, vars["job"])
+	job, err := jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -71,7 +73,8 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 
 	payload := unmarshal(r.Body, "task", w)
 	j.AppendTask(payload["task"])
-	models.Update(jobList, j)
+	jobList.Update(j)
+	jobList.Save()
 
 	w.WriteHeader(201)
 }
@@ -80,7 +83,7 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := models.Get(jobList, vars["job"])
+	job, err := jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -93,14 +96,15 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	j.DeleteTask(taskPosition)
-	models.Update(jobList, j)
+	jobList.Update(j)
+	jobList.Save()
 }
 
 func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := models.Get(jobList, vars["job"])
+	job, err := jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -111,13 +115,14 @@ func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 
 	j.AppendTrigger(payload["trigger"])
 	triggerList := models.GetTriggerList()
-	t, err := models.Get(triggerList, payload["trigger"])
+	t, err := triggerList.Get(payload["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	executor.AddTrigger(t.(models.Trigger))
-	models.Update(jobList, j)
+	jobList.Update(j)
+	jobList.Save()
 
 	w.WriteHeader(201)
 }
@@ -126,7 +131,7 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 	jobList := models.GetJobList()
 
 	vars := mux.Vars(r)
-	job, err := models.Get(jobList, vars["job"])
+	job, err := jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -138,7 +143,8 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 
 	// If Trigger is no longer attached to any Jobs, remove it from Cron
 	found := false
-	for _, job := range jobList.GetList() {
+	for _, e := range jobList.GetAll() {
+		job := e.(models.Job)
 		// Exclude this job because we just removed it. Kind of a race.
 		if job.Name == j.Name {
 			continue
@@ -156,5 +162,6 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 		executor.RemoveTrigger(t)
 	}
 
-	models.Update(jobList, j)
+	jobList.Update(j)
+	jobList.Save()
 }

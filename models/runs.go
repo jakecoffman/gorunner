@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"os/exec"
-	"sync"
 	"time"
 )
 
@@ -31,61 +30,61 @@ func (r Run) ID() string {
 }
 
 type RunList struct {
-	runs []Run
-	sync.RWMutex
+	list
 }
 
-func (j RunList) GetList() []Run {
-	return j.runs
-}
-
-func (j RunList) getList() []Elementer {
-	var elements []Elementer
-	for _, run := range j.runs {
-		elements = append(elements, run)
-	}
-	return elements
-}
-
-func (j *RunList) setList(e []Elementer) {
+func (l RunList) Save() {
 	var runs []Run
-	for _, run := range e {
-		r := run.(Run)
-		runs = append(runs, r)
+	for _, e := range l.elements {
+		runs = append(runs, e.(Run))
 	}
-	j.runs = runs
+
+	bytes, err := json.Marshal(runs)
+	if err != nil {
+		panic(err)
+	}
+	writeFile(bytes, l.fileName)
 }
 
-func (j *RunList) save() {
-	Save(j, runsFile)
+func (l *RunList) Load() {
+	bytes := readFile(l.fileName)
+	var runs []Run
+	err := json.Unmarshal([]byte(string(bytes)), &runs)
+	if err != nil {
+		panic(err)
+	}
+	l.elements = nil
+	for _, run := range runs {
+		l.elements = append(l.elements, run)
+	}
 }
 
 func (j RunList) Len() int {
 	j.RLock()
 	defer j.RUnlock()
 
-	return len(j.runs)
+	return len(j.elements)
 }
 
 func (l RunList) Less(i, j int) bool {
 	l.RLock()
 	defer l.RUnlock()
 
-	return l.runs[i].Start.Before(l.runs[j].Start)
+	return l.elements[i].(Run).Start.Before(l.elements[j].(Run).Start)
 }
 
 func (l RunList) Swap(i, j int) {
 	l.RLock()
 	defer l.RUnlock()
 
-	l.runs[i], l.runs[j] = l.runs[j], l.runs[i]
+	l.elements[i], l.elements[j] = l.elements[j], l.elements[i]
 }
 
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	run := Run{UUID: UUID, Job: job, Tasks: tasks, Start: time.Now(), Status: "New"}
 	var found bool = false
-	for _, j := range j.runs {
-		if run.UUID == j.UUID {
+	for _, j := range j.elements {
+		if run.UUID == j.(Run).UUID {
 			found = true
 		}
 	}
@@ -95,9 +94,9 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	j.Lock()
 	defer j.Unlock()
 
-	j.runs = append(j.runs, run)
+	j.elements = append(j.elements, run)
 	go j.execute(&run)
-	Save(&runList, runsFile)
+	j.Save()
 	return nil
 }
 
@@ -106,7 +105,8 @@ func (l *RunList) execute(r *Run) {
 	for _, task := range r.Tasks {
 		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
 		result := &r.Results[len(r.Results)-1]
-		Update(l, *r)
+		l.Update(*r)
+		l.Save()
 		cmd := exec.Command("cmd", "/C", task.Script)
 		out, err := cmd.Output()
 		result.Output = string(out)
@@ -115,43 +115,33 @@ func (l *RunList) execute(r *Run) {
 			result.Error = err.Error()
 			r.Status = "Failed"
 			r.End = time.Now()
-			Update(l, *r)
+			l.Update(*r)
+			l.Save()
 			jobList := GetJobList()
-			job, err := Get(jobList, r.Job.Name)
+			job, err := jobList.Get(r.Job.Name)
 			if err != nil {
 				return
 			}
 			j := job.(Job)
 			j.Status = "Failing"
-			Update(jobList, job)
+			jobList.Update(job)
+			jobList.Save()
 			return
 		}
-		Update(l, *r)
+		l.Update(*r)
+		l.Save()
 	}
 	r.End = time.Now()
 	r.Status = "Done"
 	jobList := GetJobList()
-	job, err := Get(jobList, r.Job.Name)
+	job, err := jobList.Get(r.Job.Name)
 	if err != nil {
 		return
 	}
 	j := job.(Job)
 	j.Status = "Ok"
-	Update(jobList, job)
-	Update(l, *r)
-}
-
-func (j RunList) dumps() string {
-	bytes, err := json.Marshal(j.runs)
-	if err != nil {
-		panic(err)
-	}
-	return string(bytes)
-}
-
-func (j *RunList) loads(s string) {
-	err := json.Unmarshal([]byte(s), &j.runs)
-	if err != nil {
-		panic(err)
-	}
+	jobList.Update(job)
+	jobList.Save()
+	l.Update(*r)
+	l.Save()
 }

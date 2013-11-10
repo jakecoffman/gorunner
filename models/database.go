@@ -6,24 +6,29 @@ import (
 )
 
 const (
-	jobsFile = "jobs.json"
-	runsFile = "runs.json"
-	tasksFile = "tasks.json"
+	jobsFile     = "jobs.json"
+	runsFile     = "runs.json"
+	tasksFile    = "tasks.json"
 	triggersFile = "triggers.json"
 )
 
 var (
-	jobList JobList
-	taskList TaskList
-	runList RunList
+	jobList     JobList
+	taskList    TaskList
+	runList     RunList
 	triggerList TriggerList
 )
 
 func init() {
-	Load(&jobList, jobsFile)
-	Load(&runList, runsFile)
-	Load(&taskList, tasksFile)
-	Load(&triggerList, triggersFile)
+	jobList = JobList{list{elements: make([]elementer, 10), fileName: jobsFile}}
+	taskList = TaskList{list{elements: make([]elementer, 10), fileName: tasksFile}}
+	triggerList = TriggerList{list{elements: make([]elementer, 10), fileName: triggersFile}}
+	runList = RunList{list{elements: make([]elementer, 10), fileName: runsFile}}
+
+	jobList.Load()
+	taskList.Load()
+	triggerList.Load()
+	runList.Load()
 }
 
 func GetJobList() *JobList {
@@ -42,19 +47,9 @@ func GetTriggerList() *TriggerList {
 	return &triggerList
 }
 
-type Serializable interface{
+type Serializable interface {
 	dumps() string
 	loads(s string)
-}
-
-func Save(list Serializable, filePath string) {
-	bytes := list.dumps()
-	writeFile([]byte(bytes), filePath)
-}
-
-func Load(list Serializable, filePath string) {
-	bytes := readFile(filePath)
-	list.loads(string(bytes))
 }
 
 func writeFile(bytes []byte, filePath string) {

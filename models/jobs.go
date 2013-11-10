@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"sync"
 )
 
 type Job struct {
@@ -48,46 +47,32 @@ func (j *Job) DeleteTrigger(trigger string) error {
 }
 
 type JobList struct {
-	jobs []Job
-	sync.RWMutex
+	list
 }
 
-func (j JobList) GetList() []Job {
-	return j.jobs
-}
-
-func (j JobList) getList() []Elementer {
-	var elements []Elementer
-	for _, job := range j.jobs {
-		elements = append(elements, job)
-	}
-	return elements
-}
-
-func (j *JobList) setList(e []Elementer) {
+func (l JobList) Save() {
 	var jobs []Job
-	for _, job := range e {
-		j := job.(Job)
-		jobs = append(jobs, j)
+
+	for _, e := range l.elements {
+		jobs = append(jobs, e.(Job))
 	}
-	j.jobs = jobs
-}
 
-func (j *JobList) save() {
-	Save(j, jobsFile)
-}
-
-func (j JobList) dumps() string {
-	bytes, err := json.Marshal(j.jobs)
+	bytes, err := json.Marshal(jobs)
 	if err != nil {
 		panic(err)
 	}
-	return string(bytes)
+	writeFile(bytes, l.fileName)
 }
 
-func (j *JobList) loads(s string) {
-	err := json.Unmarshal([]byte(s), &j.jobs)
+func (l *JobList) Load() {
+	bytes := readFile(l.fileName)
+	var jobs []Job
+	err := json.Unmarshal([]byte(string(bytes)), &jobs)
 	if err != nil {
 		panic(err)
+	}
+	l.elements = nil
+	for _, job := range jobs {
+		l.elements = append(l.elements, job)
 	}
 }

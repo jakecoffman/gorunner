@@ -10,7 +10,7 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(models.Json(taskList)))
+	w.Write([]byte(taskList.Json()))
 }
 
 func AddTask(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +18,12 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 
 	payload := unmarshal(r.Body, "name", w)
 
-	models.Append(taskList, models.Task{payload["name"], ""})
+	err := taskList.Append(models.Task{payload["name"], ""})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	taskList.Save()
 	w.WriteHeader(201)
 }
 
@@ -26,7 +31,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
 	vars := mux.Vars(r)
-	task, err := models.Get(taskList, vars["task"])
+	task, err := taskList.Get(vars["task"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -39,7 +44,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
 	vars := mux.Vars(r)
-	task, err := models.Get(taskList, vars["task"])
+	task, err := taskList.Get(vars["task"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -49,18 +54,20 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	t := task.(models.Task)
 	t.Script = payload["script"]
-	models.Update(taskList, t)
+	taskList.Update(t)
+	taskList.Save()
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskList := models.GetTaskList()
 
 	vars := mux.Vars(r)
-	task, err := models.Get(taskList, vars["task"])
+	task, err := taskList.Get(vars["task"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	models.Delete(taskList, task.ID())
+	taskList.Delete(task.ID())
+	taskList.Save()
 }

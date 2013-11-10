@@ -11,7 +11,7 @@ func ListTriggers(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(models.Json(triggerList)))
+	w.Write([]byte(triggerList.Json()))
 }
 
 func AddTrigger(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +20,8 @@ func AddTrigger(w http.ResponseWriter, r *http.Request) {
 	payload := unmarshal(r.Body, "name", w)
 
 	trigger := models.Trigger{Name: payload["name"]}
-	models.Append(triggerList, trigger)
+	triggerList.Append(trigger)
+	triggerList.Save()
 	w.WriteHeader(201)
 }
 
@@ -28,7 +29,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	vars := mux.Vars(r)
-	trigger, err := models.Get(triggerList, vars["trigger"])
+	trigger, err := triggerList.Get(vars["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -41,7 +42,7 @@ func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
 	triggerList := models.GetTriggerList()
 
 	vars := mux.Vars(r)
-	trigger, err := models.Get(triggerList, vars["trigger"])
+	trigger, err := triggerList.Get(vars["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -52,10 +53,11 @@ func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
 	t := trigger.(models.Trigger)
 	t.Schedule = payload["cron"]
 	executor.AddTrigger(t)
-	err = models.Update(triggerList, t)
+	err = triggerList.Update(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	triggerList.Save()
 }
 
 func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
@@ -63,5 +65,6 @@ func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	models.Delete(triggerList, vars["trigger"])
+	triggerList.Delete(vars["trigger"])
+	triggerList.Save()
 }

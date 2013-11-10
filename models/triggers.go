@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"sync"
 )
 
 type Trigger struct {
@@ -15,46 +14,32 @@ func (t Trigger) ID() string {
 }
 
 type TriggerList struct {
-	triggers []Trigger
-	sync.RWMutex
+	list
 }
 
-func (t TriggerList) GetList() []Trigger {
-	return t.triggers
-}
-
-func (t TriggerList) getList() []Elementer {
-	var elements []Elementer
-	for _, trigger := range t.triggers {
-		elements = append(elements, trigger)
-	}
-	return elements
-}
-
-func (t *TriggerList) setList(e []Elementer) {
+func (l TriggerList) Save() {
 	var triggers []Trigger
-	for _, trigger := range e {
-		t := trigger.(Trigger)
-		triggers = append(triggers, t)
+
+	for _, e := range l.elements {
+		triggers = append(triggers, e.(Trigger))
 	}
-	t.triggers = triggers
-}
 
-func (t *TriggerList) save() {
-	Save(t, triggersFile)
-}
-
-func (j TriggerList) dumps() string {
-	bytes, err := json.Marshal(j.triggers)
+	bytes, err := json.Marshal(triggers)
 	if err != nil {
 		panic(err)
 	}
-	return string(bytes)
+	writeFile(bytes, l.fileName)
 }
 
-func (j *TriggerList) loads(s string) {
-	err := json.Unmarshal([]byte(s), &j.triggers)
+func (l *TriggerList) Load() {
+	bytes := readFile(l.fileName)
+	var triggers []Trigger
+	err := json.Unmarshal([]byte(string(bytes)), &triggers)
 	if err != nil {
 		panic(err)
+	}
+	l.elements = nil
+	for _, trigger := range triggers {
+		l.elements = append(l.elements, trigger)
 	}
 }
