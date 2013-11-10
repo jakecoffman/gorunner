@@ -100,6 +100,13 @@ app.factory('gorunner', function($http){
 			.error(failure);
 		},
 
+		deleteJob: function(name, success, failure) {
+			$http({
+				method: "DELETE",
+				url: "/jobs/" + name
+			}).success(success).error(failure);
+		},
+
 		addTaskToJob: function(task, job, success, failure){
 			$http({
 				method: "POST",
@@ -370,6 +377,14 @@ function JobCtl($scope, $routeParams, gorunner) {
 			$scope.refreshJob();
 		}, function() {
 			alert("Failed to add trigger to job")
+		})
+	};
+
+	$scope.deleteJob = function() {
+		gorunner.deleteJob($routeParams.job, function(){
+			window.location = "/#/jobs";
+		}, function(){
+			alert("Failed to delete job " + $routeParams.job);
 		})
 	};
 
