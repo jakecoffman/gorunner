@@ -5,13 +5,13 @@
 			<span class="caret"></span>
 		</button>
 		<ul class="dropdown-menu pull-right">
-			<li><a href="#" ng-click="promptTask()"><i class="icon-plus"></i> Add new task</a></li>
+			<li><a href="javascript:void(0)" ng-click="promptTask()"><i class="icon-plus"></i> Add new task</a></li>
 		</ul>
 	</div>
 </div>
 <h1>Tasks</h1>
-<p ng-hide="tasks">There are not any tasks yet. You can add one now by clicking on the gear icon above.</p>
-<table class="table" ng-show="tasks">
+<p ng-hide="tasks.length > 0">There are not any tasks yet. You can add one now by clicking on the gear icon above.</p>
+<table class="table" ng-show="tasks.length > 0">
 	<thead>
 	<tr>
 		<th>Task</th>

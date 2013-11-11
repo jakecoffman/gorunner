@@ -1,9 +1,9 @@
 <h1>Runs</h1>
-<p ng-hide="runs">
+<p ng-hide="runs.length > 0">
 	No runs yet. To create a run, first create a <a href="/#/tasks">Task</a> and assign it to a
 	<a href="/#/jobs">Job</a>, then run the job.
 </p>
-<table class="table" ng-show="runs">
+<table class="table" ng-show="runs.length > 0">
 	<thead>
 	<tr>
 		<th>UUID</th>

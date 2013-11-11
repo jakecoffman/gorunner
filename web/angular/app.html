@@ -45,7 +45,6 @@
 				<li ng-class="{active: title=='triggers'}"><a href="/#/triggers">Triggers</a></li>
 				<li><a href="/#/runs">Runs</a></li>
 				<li class="nav-header">Most Recent Runs</li>
-				<li><i class="icon-spinner icon-spin" ng-hide="recent"></i></li>
 				<li>
 					<ul class="unstyled" ng-repeat="run in recent">
 						<li class='history'>
@@ -66,7 +65,9 @@
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
 <script src="http://code.angularjs.org/1.1.5/angular.min.js"></script>
+<script src="http://code.angularjs.org/1.1.5/angular-resource.min.js"></script>
 <script src="/static/js/ui-bootstrap-tpls-0.6.0.min.js"></script>
 <script src="/static/js/app.js"></script>
+<script src="/static/js/services.js"></script>
 </body>
 </html>

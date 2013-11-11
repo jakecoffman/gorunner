@@ -1,4 +1,4 @@
-var app = angular.module("GoRunnerApp", ['ui.bootstrap'], function ($routeProvider) {
+var app = angular.module("GoRunnerApp", ['ui.bootstrap', 'gorunnerServices'], function ($routeProvider) {
 	$routeProvider.when('/jobs', {
 		title: "jobs",
 		templateUrl: '/static/templates/jobs.html',
@@ -61,221 +61,10 @@ app.run(['$location', '$rootScope', function($location, $rootScope) {
 	});
 }]);
 
-app.factory('gorunner', function($http){
-	return {
-		listRuns: function (offset, length, success, failure) {
-			$http({
-				method: "GET",
-				url: "/runs?offset=" + offset + "&length=" + length
-			})
-			.success(success)
-			.error(failure)
-		},
-
-		listJobs: function (success, failure) {
-			$http({
-				method: "GET",
-				url: "/jobs"
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		getJob: function(name, success, failure) {
-			$http({
-				method: "GET",
-				url: "/jobs/" + name
-			})
-			.success(success)
-			.error(failure)
-		},
-
-		addJob: function(name, success, failure) {
-			$http({
-				method: "POST",
-				url: "/jobs",
-				data: {'name': name}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		deleteJob: function(name, success, failure) {
-			$http({
-				method: "DELETE",
-				url: "/jobs/" + name
-			}).success(success).error(failure);
-		},
-
-		addTaskToJob: function(task, job, success, failure){
-			$http({
-				method: "POST",
-				url: "/jobs/" + job + "/tasks",
-				data: {task: task}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		addTriggerToJob: function(trigger, job, success, failure) {
-			$http({
-				method: "POST",
-				url: "/jobs/" + job + "/triggers",
-				data: {trigger: trigger}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		removeTaskFromJob: function(task_idx, job, success, failure) {
-			$http({
-				method: "DELETE",
-				url: "/jobs/" + job + "/tasks/" + task_idx
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		removeTriggerFromJob: function(trigger, job, success, failure) {
-			$http({
-				method: "DELETE",
-				url: "/jobs/" + job + "/triggers/" + trigger
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		listTasks: function(success, failure) {
-			$http({
-				method: "GET",
-				url: "/tasks"
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		getTask: function(name, success, failure) {
-			$http({
-				method: "GET",
-				url: "/tasks/" + name
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		addTask: function(name, success, failure) {
-			$http({
-				method: "POST",
-				url: "/tasks",
-				data: {name: name}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		saveTask: function(name, script, success, failure) {
-			$http({
-				method: "PUT",
-				url: "/tasks/" + name,
-				data: {script: script}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		listJobsForTask: function(task, success, failure) {
-			$http({
-				method: "GET",
-				url: "/tasks/" + task + "/jobs"
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		getRun: function(run, success, failure) {
-			$http({
-				method: "GET",
-				url: "/runs/" + run
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		runJob: function(job, success, failure) {
-			$http({
-				method: "POST",
-				url: '/runs',
-				data: {job: job}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		listTriggers: function(success, failure) {
-			$http({
-				method: "GET",
-				url: "/triggers"
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		getTrigger: function(name, success, failure) {
-			$http({
-				method: "GET",
-				url: "/triggers/" + name
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		saveTrigger: function(name, cron, success, failure) {
-			$http({
-				method: "PUT",
-				url: "/triggers/" + name,
-				data: {cron: cron}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		addTrigger: function(name, success, failure) {
-			$http({
-				method: "POST",
-				url: "/triggers",
-				data: {name: name}
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		deleteTrigger: function(name, success, failure) {
-			$http({
-				method: "DELETE",
-				url: "/triggers/" + name
-			})
-			.success(success)
-			.error(failure);
-		},
-
-		listJobsForTrigger: function(trigger, success, failure) {
-			$http({
-				method: "GET",
-				url: "/triggers/" + trigger + "/jobs"
-			})
-			.success(success)
-			.error(failure);
-		}
-	}
-});
-
-app.controller('MainCtl', function ($scope, $timeout, gorunner) {
+app.controller('MainCtl', function ($scope, $timeout, Run) {
+	$scope.recent = [];
 	$scope.refreshRuns = function() {
-		gorunner.listRuns(0, 20, function(data){
-			$scope.recent = data;
-		}, function(data) {
-			$scope.recent = [];
-		});
+		$scope.recent = Run.query({'offset': 0, 'length': 20});
 	};
 
 	$scope.refreshRunsEvery = function(millis) {
@@ -285,107 +74,67 @@ app.controller('MainCtl', function ($scope, $timeout, gorunner) {
 		}, millis);
 	};
 
-	$scope.refreshRunsEvery(2000);
+	$scope.refreshRuns();
+	$scope.refreshRunsEvery(3000);
 });
 
-function JobsCtl($scope, gorunner) {
-	gorunner.listJobs(function (data) {
-		$scope.jobs = data;
-	}, function () {
-		alert("Error loading jobs");
-	});
+function JobsCtl($scope, Job, Run) {
+	$scope.jobs = Job.query();
 
 	$scope.quickRun = function(job) {
-		gorunner.runJob(job, function(){
-			$scope.refreshRuns();
-		}, function(){
-			alert("Failed to start job " + job);
-		});
+		var run = new Run();
+		run.job = job;
+		run.$save();
+		$scope.refreshRuns();
 	};
 
 	$scope.promptJob = function() {
 		var name = prompt("Enter name of job:");
 		if(name) {
-			gorunner.addJob(name, function(){
-				window.location = "/#/jobs/" + name;
-			}, function(){
-				alert("Error adding job " + name);
-			})
+			var job = new Job();
+			job.name = name;
+			job.$save();
+			window.location = "/#/jobs/" + name;
 		}
 	}
 }
 
-function JobCtl($scope, $routeParams, gorunner) {
-	$scope.job = $routeParams.job;
-
+function JobCtl($scope, $routeParams, Job, Task, Trigger) {
 	$scope.refreshJob = function(){
-		gorunner.getJob($routeParams.job, function(data){
-			$scope.job = data;
-		}, function(){
-			alert("Error loading " + name);
-		});
+		$scope.job = Job.get({id: $routeParams.job})
 	};
 
-	$scope.tasks = [];
 	$scope.refreshTasks = function(){
-		gorunner.listTasks(function(data) {
-			for(var i=0; i<data.length; i++) {
-				$scope.tasks.push(data[i].name);
-			}
-		}, function(data) {
-			alert("Error loading tasks");
-		});
+		$scope.tasks = Task.query();
 	};
 
-	$scope.triggers = [];
 	$scope.refreshTriggers = function() {
-		gorunner.listTriggers(function(data){
-			for(var i=0; i<data.length; i++) {
-				$scope.triggers.push(data[i].name);
-			}
-		}, function(data){
-			alert("Error loading triggers")
-		});
+		$scope.triggers = Trigger.query();
 	};
 
 	$scope.removeTask = function(idx) {
-		gorunner.removeTaskFromJob(idx, $routeParams.job, function(){
-			$scope.refreshJob();
-		}, function(){
-			alert("Failed to remove task");
-		})
+		Job.removeTask({tidx: idx, id: $routeParams.job});
+		$scope.refreshJob();
 	};
 
 	$scope.removeTrigger = function(name) {
-		gorunner.removeTriggerFromJob(name, $routeParams.job, function(){
-			$scope.refreshJob()
-		}, function() {
-			alert("Failed to remove trigger");
-		})
+		Job.removeTrigger({trigger: name, id: $routeParams.job});
+		$scope.refreshJob()
 	};
 
 	$scope.addTaskToJob = function(task) {
-		gorunner.addTaskToJob(task, $routeParams.job, function(){
-			$scope.refreshJob();
-		}, function() {
-			alert("Failed to add task to job");
-		});
+		Job.addTask({task: task, id: $routeParams.job});
+		$scope.refreshJob();
 	};
 
 	$scope.addTriggerToJob = function(trigger) {
-		gorunner.addTriggerToJob(trigger, $routeParams.job, function(){
-			$scope.refreshJob();
-		}, function() {
-			alert("Failed to add trigger to job")
-		})
+		Job.addTrigger({trigger: trigger, id: $routeParams.job});
+		$scope.refreshJob();
 	};
 
 	$scope.deleteJob = function() {
-		gorunner.deleteJob($routeParams.job, function(){
-			window.location = "/#/jobs";
-		}, function(){
-			alert("Failed to delete job " + $routeParams.job);
-		})
+		Job.$delete({id: $routeParams.job});
+		window.location = "/#/jobs";
 	};
 
 	$scope.refreshJob();
@@ -393,117 +142,68 @@ function JobCtl($scope, $routeParams, gorunner) {
 	$scope.refreshTriggers();
 }
 
-function TasksCtl($scope, gorunner) {
-	gorunner.listTasks(function(data) {
-		$scope.tasks = data;
-	}, function(data) {
-		alert("Error loading tasks");
-	});
+function TasksCtl($scope, Task) {
+	$scope.tasks = Task.query();
 
 	$scope.promptTask = function() {
 		var name = prompt("Enter name of task:");
 		if(name) {
-			gorunner.addTask(name, function(){
-				window.location = "/#/tasks/" + name;
-			}, function(){
-				alert("Error adding task " + name);
-			})
+			var newTask = new Task();
+			newTask.name = name;
+			newTask.$save();
+			window.location = "/#/tasks/" + name;
 		}
+	};
+}
+
+function TaskCtl($scope, $routeParams, Task) {
+	$scope.task = Task.get({id: $routeParams.task});
+	$scope.jobs = Task.jobs({id: $routeParams.task});
+
+	$scope.saveTask = function() {
+		Task.update({id: $routeParams.task, script: $scope.task.script});
+		window.location = "/#/tasks";
+	};
+
+	$scope.deleteTask = function() {
+		Task.$delete({id: $routeParams.task});
 	}
 }
 
-function TaskCtl($scope, $routeParams, gorunner) {
-	gorunner.getTask($routeParams.task, function(data) {
-		$scope.task = data;
-	}, function(data) {
-		alert("Error loading task " + $routeParams.task)
-	});
-
-	$scope.saveTask = function() {
-		gorunner.saveTask($scope.task.name, $scope.task.script, function(){
-			window.location = "/#/tasks";
-		}, function(){
-			alert("Save failed");
-		})
-	};
-
-	gorunner.listJobsForTask($routeParams.task, function(data){
-		$scope.jobs = data;
-	}, function() {
-		alert("Failed to get jobs for task " + $routeParams.task);
-	})
+function RunsCtl($scope, Run) {
+	$scope.runs = Run.query();
 }
 
-function RunsCtl($scope, gorunner) {
-	gorunner.listRuns("", "", function(data) {
-		$scope.runs = data;
-	}, function(data) {
-		alert("Failed to list runs");
-	})
+function RunCtl($scope, $routeParams, Run) {
+	$scope.run = Run.get({id: $routeParams.run});
 }
 
-function RunCtl($scope, $routeParams, gorunner) {
-	gorunner.getRun($routeParams.run, function(data) {
-		$scope.run = data;
-	}, function(data) {
-		alert("Failed to get run " + $routeParams.run);
-	})
-}
-
-function TriggersCtl($scope, gorunner) {
-	$scope.refreshTriggers = function(){
-		gorunner.listTriggers(function(data){
-			$scope.triggers = data;
-		}, function() {
-			alert("Failed to load triggers");
-		})
-	};
-
-	$scope.refreshTriggers();
+function TriggersCtl($scope, Trigger) {
+	$scope.triggers = Trigger.query();
 
 	$scope.deleteTrigger = function(name) {
-		gorunner.deleteTrigger(name, function(){
-			$scope.refreshTriggers();
-		}, function(){
-			alert("Failed to delete trigger " + name);
-		});
+		Trigger.$delete({id: name});
+		$scope.refreshTriggers();
 	};
 
 	$scope.promptTrigger = function(){
 		var name = prompt("Enter a name for the new trigger");
 		if(name) {
-			gorunner.addTrigger(name, function(){
-				$scope.refreshTriggers();
-			}, function(){
-				alert("Failed to load triggers");
-			})
+			var trigger = new Trigger();
+			trigger.name = name;
+			trigger.$save();
+			$scope.refreshTriggers();
 		}
 	}
 }
 
-function TriggerCtl($scope, $routeParams, gorunner) {
-	$scope.getTrigger = function(name) {
-		gorunner.getTrigger(name, function(data){
-			$scope.trigger = data;
-		}, function(){
-			alert("Failed to get trigger " + $routeParams.trigger);
-		});
-	};
-
-	$scope.getTrigger($routeParams.trigger);
+function TriggerCtl($scope, $routeParams, Trigger) {
+	$scope.trigger = Trigger.get({id: $routeParams.trigger});
 
 	$scope.saveTrigger = function() {
-		gorunner.saveTrigger($scope.trigger.name, $scope.trigger.schedule, function(){
-			window.location = "/#/triggers";
-		}, function() {
-			alert("Failed to save trigger");
-		})
+		Trigger.update({id: $scope.trigger.name, cron: $scope.trigger.schedule});
+		window.location = "/#/triggers";
 	};
 
-	gorunner.listJobsForTrigger($routeParams.trigger, function(data){
-		$scope.jobs = data;
-	}, function() {
-		alert("Failed to get jobs for trigger " + $routeParams.trigger);
-	})
-
+	$scope.jobs = Trigger.listJobs({id: $routeParams.trigger});
 }

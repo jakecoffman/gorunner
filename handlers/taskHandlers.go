@@ -68,3 +68,10 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	taskList.Delete(task.ID())
 }
+
+func ListJobsForTask(w http.ResponseWriter, r *http.Request) {
+	jobList := models.GetJobList()
+	vars := mux.Vars(r)
+	jobs := jobList.GetJobsWithTask(vars["task"])
+	marshal(jobs, w)
+}

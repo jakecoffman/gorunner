@@ -64,6 +64,7 @@ func (l *JobList) Load() {
 }
 
 func (l *JobList) GetJobsWithTrigger(triggerName string) (jobs []Job) {
+	jobs = make([]Job, 0)
 	for _, e := range l.elements {
 		job := e.(Job)
 		for _, trigger := range job.Triggers {
@@ -76,6 +77,7 @@ func (l *JobList) GetJobsWithTrigger(triggerName string) (jobs []Job) {
 }
 
 func (l *JobList) GetJobsWithTask(taskName string) (jobs []Job) {
+	jobs = make([]Job, 0)
 	for _, e := range l.elements {
 		job := e.(Job)
 		for _, task := range job.Tasks {
