@@ -26,7 +26,7 @@ func (l list) Get(id string) (elementer, error) {
 			return e, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Thing '%s' not found", id))
+	return nil, errors.New(fmt.Sprintf("Element '%s' not found", id))
 }
 
 func (l list) Update(e elementer) error {
@@ -74,7 +74,7 @@ func (l *list) Delete(id string) error {
 		}
 	}
 	if !found {
-		return errors.New("Thing not found for deletion")
+		return errors.New(fmt.Sprintf("Element '%s' not found for deletion", id))
 	}
 	l.elements = l.elements[:i+copy(l.elements[i:], l.elements[i+1:])]
 	l.save()
