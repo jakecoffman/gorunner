@@ -10,7 +10,10 @@
 	</div>
 </div>
 <h1>{{ task.name }}</h1>
-<textarea ng-model="task.script"></textarea>
+<style>
+	.ace_editor { height: 200px; }
+</style>
+<div ng-model="task.script" ui-ace="{mode: 'sh'}"></div>
 <hr/>
 <button class="btn" ng-click="saveTask()">Save</button>
 <h3>Bindings</h3>
