@@ -1,9 +1,9 @@
 function JobsCtl($scope, Job, Run) {
 	$scope.jobs = Job.query();
 
-	$scope.quickRun = function(job) {
+	$scope.quickRun = function(name) {
 		var run = new Run();
-		run.job = job;
+		run.job = name;
 		run.$save();
 		$scope.refreshRuns();
 	};

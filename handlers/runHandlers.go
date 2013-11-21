@@ -55,11 +55,11 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 	payload := unmarshal(r.Body, "job", w)
 
 	job, err := jobsList.Get(payload["job"])
-	j := job.(models.Job)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	j := job.(models.Job)
 
 	id, err := uuid.NewV4()
 	if err != nil {
