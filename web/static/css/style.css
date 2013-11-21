@@ -1,3 +1,7 @@
 th:not(:first-child), td:not(:first-child) {
     text-align: center;
 }
+
+.history {
+    font-size: 9pt;
+}

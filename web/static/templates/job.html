@@ -19,7 +19,7 @@
 		add trigger <span class="caret"></span></button>
 	<ul class="dropdown-menu">
 		<li ng-repeat="trigger in triggers">
-			<a ng-click="addTriggerToJob('{{trigger.name}}')" href="javascript:void(0)">{{ trigger.name }}</a>
+			<a ng-click="addTriggerToJob(trigger.name)" href="javascript:void(0)">{{ trigger.name }}</a>
 		</li>
 	</ul>
 </div>
@@ -40,7 +40,7 @@
 	<tr ng-repeat="trigger in job.triggers">
 		<td><a href="/#/triggers/{{trigger}}">{{trigger}}</a></td>
 		<td>
-			<button class="btn" ng-click="removeTrigger('{{trigger}}')">
+			<button class="btn" ng-click="removeTrigger(trigger)">
 				<i class="icon-remove"></i>
 			</button>
 		</td>
@@ -55,7 +55,7 @@
 	</button>
 	<ul class="dropdown-menu">
 		<li ng-repeat="task in tasks">
-			<a ng-click="addTaskToJob('{{task.name}}')" href="javascript:void(0)">{{ task.name }}</a>
+			<a ng-click="addTaskToJob(task.name)" href="javascript:void(0)">{{ task.name }}</a>
 		</li>
 	</ul>
 </div>
