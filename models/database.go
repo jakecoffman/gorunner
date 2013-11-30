@@ -19,6 +19,9 @@ var (
 	triggerList TriggerList
 )
 
+type ListWriter func([]byte, string)
+type ListReader func(string) []byte
+
 func init() {
 	jobList = JobList{list{elements: make([]elementer, 10), fileName: jobsFile}}
 	taskList = TaskList{list{elements: make([]elementer, 10), fileName: tasksFile}}
@@ -27,7 +30,7 @@ func init() {
 
 	jobList.Load()
 	taskList.Load()
-	triggerList.Load()
+	triggerList.Load(readFile)
 	runList.Load()
 }
 
@@ -57,7 +60,7 @@ func writeFile(bytes []byte, filePath string) {
 func readFile(filePath string) []byte {
 	_, err := os.Stat(filePath)
 	if err != nil {
-		println("Couldn't file file, creating fresh:", filePath)
+		println("Couldn't read file, creating fresh:", filePath)
 		err = ioutil.WriteFile(filePath, []byte("[]"), 0644)
 		if err != nil {
 			panic(err)

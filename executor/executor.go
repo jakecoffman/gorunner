@@ -1,11 +1,9 @@
 package executor
 
 import (
-	"fmt"
 	"github.com/jakecoffman/cron"
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/nu7hatch/gouuid"
-	"time"
 )
 
 var c *cron.Cron
@@ -14,7 +12,7 @@ var triggers map[string]struct{}
 func init() {
 	c = cron.New()
 	c.Start()
-	c.AddFunc("0 * * * *", func() { fmt.Println("test ran at " + time.Now().Format("2006-01-02 15:04:05")) }, "test")
+	// c.AddFunc("0 * * * *", func() { fmt.Println("test ran at " + time.Now().Format("2006-01-02 15:04:05")) }, "test")
 }
 
 func AddTrigger(t models.Trigger) {

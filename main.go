@@ -24,12 +24,7 @@ func gateway(w http.ResponseWriter, req *http.Request) {
 	fmt.Printf("%s %s %s\n", req.RemoteAddr, req.Method, req.URL)
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	println("Working directory", wd)
-
-	server := &http.Server{Addr: port, Handler: nil}
-
+func setupRoutes() {
 	r = mux.NewRouter()
 
 	r.HandleFunc("/", app)
@@ -61,7 +56,15 @@ func main() {
 	r.HandleFunc("/triggers/{trigger}/jobs", handlers.ListJobsForTrigger).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
+}
 
+func main() {
+	wd, _ := os.Getwd()
+	println("Working directory", wd)
+
+	// start the server and routes
+	server := &http.Server{Addr: port, Handler: nil}
+	setupRoutes()
 	http.HandleFunc("/", gateway)
 
 	go func() {
