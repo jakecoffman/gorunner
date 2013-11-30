@@ -17,8 +17,8 @@ type TaskList struct {
 	list
 }
 
-func (l *TaskList) Load() {
-	bytes := readFile(l.fileName)
+func (l *TaskList) Load(read ListReader) {
+	bytes := read(l.fileName)
 	var tasks []Task
 	err := json.Unmarshal([]byte(string(bytes)), &tasks)
 	if err != nil {

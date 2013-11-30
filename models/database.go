@@ -29,7 +29,7 @@ func InitDatabase() {
 	runList = RunList{list{elements: make([]elementer, 10), fileName: runsFile}}
 
 	jobList.Load()
-	taskList.Load()
+	taskList.Load(readFile)
 	triggerList.Load(readFile)
 	runList.Load()
 }

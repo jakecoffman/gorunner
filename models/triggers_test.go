@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestID(t *testing.T) {
+func TestTriggerID(t *testing.T) {
 	trigger := Trigger{Name: "Triggy", Schedule: "* * * * * *"}
 	if trigger.ID() != "Triggy" {
 		t.Errorf("ID() expected %s but got %s", "Triggy", trigger.ID())
@@ -17,7 +17,7 @@ func mockListReaderFactory(value string) ListReader {
 	}
 }
 
-func TestLoad(t *testing.T) {
+func TestTriggerLoad(t *testing.T) {
 	triggerList = TriggerList{list{elements: make([]elementer, 10), fileName: "somefile.txt"}}
 	value := `[{"name":"test","schedule":"* * * * * *"}]`
 	triggerList.Load(mockListReaderFactory(value))
