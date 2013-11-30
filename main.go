@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jakecoffman/gorunner/handlers"
+	"github.com/jakecoffman/gorunner/models"
 	"net"
 	"net/http"
 	"os"
@@ -65,6 +66,7 @@ func main() {
 	// start the server and routes
 	server := &http.Server{Addr: port, Handler: nil}
 	setupRoutes()
+	models.InitDatabase()
 	http.HandleFunc("/", gateway)
 
 	go func() {

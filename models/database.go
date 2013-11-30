@@ -22,7 +22,7 @@ var (
 type ListWriter func([]byte, string)
 type ListReader func(string) []byte
 
-func init() {
+func InitDatabase() {
 	jobList = JobList{list{elements: make([]elementer, 10), fileName: jobsFile}}
 	taskList = TaskList{list{elements: make([]elementer, 10), fileName: tasksFile}}
 	triggerList = TriggerList{list{elements: make([]elementer, 10), fileName: triggersFile}}
