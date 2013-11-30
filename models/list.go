@@ -53,7 +53,7 @@ func (l *list) Append(e elementer) error {
 
 	_, err := l.pos(e.ID())
 	if err == nil {
-		return errors.New("Job with that id found in list")
+		return errors.New("Element with that id found in list")
 	}
 	l.elements = append(l.elements, e)
 	l.save()
