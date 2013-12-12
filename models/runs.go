@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"os"
 	"os/exec"
 	"time"
 )
@@ -112,7 +113,8 @@ func (l *RunList) execute(r *Run) {
 		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
 		result := &r.Results[len(r.Results)-1]
 		l.Update(*r)
-		cmd := exec.Command("cmd", "/C", task.Script)
+		shell, commandArg := getShell()
+		cmd := exec.Command(shell, commandArg, task.Script)
 		out, err := cmd.Output()
 		result.Output = string(out)
 		result.End = time.Now()
@@ -141,7 +143,15 @@ func (l *RunList) execute(r *Run) {
 		return
 	}
 	j := job.(Job)
-	j.Status = "Ok"
+	j.Status = "Ok" 
 	jobList.Update(job)
 	l.Update(*r)
+}
+
+func getShell() (string, string) {
+	var shell = os.Getenv("SHELL")
+	if ("" != shell ) {
+		return shell,"-c"
+	}
+	return "cmd", "/C"
 }
