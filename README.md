@@ -10,7 +10,8 @@ Installation instructions
 
 	$ cd $GOPATH/src
 	$ go get github.com/jakecoffman/gorunner
-	$ go run github.com/jakecoffman/gorunner/main.go
+	$ cd github.com/jakecoffman/gorunner
+	$ go run main.go
 	
 Or, you know, whatever works. 
 
