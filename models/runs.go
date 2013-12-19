@@ -9,15 +9,18 @@ import (
 	"bufio"
 	"io"
 	"log"
+	"sync"
 )
 
 type Result struct {
 	Start  time.Time `json:"start"`
 	End    time.Time `json:"end"`
 	Task   Task      `json:"task"`
-	Output string    `json:"output"`
+	Output OutputHolder   `json:"output"`
 	Error  string    `json:"error"`
 }
+
+
 
 type Run struct {
 	UUID    string    `json:"uuid"`
@@ -110,6 +113,8 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	return nil
 }
 
+
+
 func (l *RunList) execute(r *Run) {
 	r.Status = "Running"
 	for _, task := range r.Tasks {
@@ -118,7 +123,7 @@ func (l *RunList) execute(r *Run) {
 		l.Update(*r)
 		shell, commandArg := getShell()
 		cmd := exec.Command(shell, commandArg, task.Script)
-		//out, err := cmd.Output()
+
 		outPipe, err := cmd.StdoutPipe()
 		if err != nil {
 			reportRunError(l, r, result, err)
@@ -130,15 +135,15 @@ func (l *RunList) execute(r *Run) {
 			reportRunError(l, r, result, err)
 			return
 		}
-
-		go consumeOutput(outPipe, result)
-		go consumeOutput(errPipe, result)
+		var outputWg sync.WaitGroup
+		outputWg.Add(1)
+		go result.muxIntoOutput(outPipe, errPipe, &outputWg)
 
 		if err := cmd.Start(); err != nil {
 			reportRunError(l, r, result, err)
 			return
 		}
-
+		outputWg.Wait()
 		if err := cmd.Wait(); err != nil {
 			reportRunError(l, r, result, err)
 			return
@@ -163,17 +168,44 @@ func (l *RunList) execute(r *Run) {
 	l.Update(*r)
 }
 
-func consumeOutput(reader io.ReadCloser, result *Result) {
-	defer reader.Close()
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		text := scanner.Text()
-		//log.Println("   Consumed: ",  text)
-		result.Output += text + "\n"
+func (result *Result) muxIntoOutput(stdout io.ReadCloser, stderr io.ReadCloser, done *sync.WaitGroup) {
+	defer done.Done()
+	outLines := consumeLines(stdout)
+	errLines := consumeLines(stderr)
+	for outLines != nil || errLines != nil {
+		select {
+		case line, ok := <-outLines:
+			if ok {
+				result.Output.WriteString(line + "\n")
+			} else {
+				outLines = nil
+			}
+		case line, ok := <-errLines:
+			if ok {
+				result.Output.WriteString(line + "\n")
+			} else {
+				errLines = nil
+			}
+		}
 	}
-	if err := scanner.Err(); err != nil {
-		log.Println("reading standard input:", err)
-	}
+}
+
+
+func consumeLines(reader io.ReadCloser) <-chan string {
+	lines := make(chan string)
+	go func() {
+		defer reader.Close()
+		defer close(lines)
+		scanner := bufio.NewScanner(reader)
+
+		for scanner.Scan() {
+			lines <- scanner.Text()
+		}
+		if err := scanner.Err(); err != nil {
+			log.Println("reading output: ", err)
+		}
+	}()
+	return lines
 }
 
 func reportRunError(l *RunList, r *Run, result *Result, err error) {
