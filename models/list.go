@@ -17,7 +17,7 @@ type list struct {
 	sync.RWMutex
 }
 
-func (l list) Get(id string) (elementer, error) {
+func (l *list) Get(id string) (elementer, error) {
 	l.RLock()
 	defer l.RUnlock()
 
@@ -29,7 +29,7 @@ func (l list) Get(id string) (elementer, error) {
 	return nil, errors.New(fmt.Sprintf("Element '%s' not found", id))
 }
 
-func (l list) Update(e elementer) error {
+func (l *list) Update(e elementer) error {
 	l.Lock()
 	defer l.Unlock()
 
@@ -81,7 +81,7 @@ func (l *list) Delete(id string) error {
 	return nil
 }
 
-func (l list) Json() []byte {
+func (l *list) Json() []byte {
 	l.RLock()
 	defer l.RUnlock()
 
