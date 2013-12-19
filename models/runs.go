@@ -6,15 +6,21 @@ import (
 	"os"
 	"os/exec"
 	"time"
+	"bufio"
+	"io"
+	"log"
+	"sync"
 )
 
 type Result struct {
 	Start  time.Time `json:"start"`
 	End    time.Time `json:"end"`
 	Task   Task      `json:"task"`
-	Output string    `json:"output"`
+	Output OutputHolder   `json:"output"`
 	Error  string    `json:"error"`
 }
+
+
 
 type Run struct {
 	UUID    string    `json:"uuid"`
@@ -22,7 +28,7 @@ type Run struct {
 	Tasks   []Task    `json:"tasks"`
 	Start   time.Time `json:"start"`
 	End     time.Time `json:"end"`
-	Results []Result  `json:"results"`
+	Results []*Result  `json:"results"`
 	Status  string    `json:"status"`
 }
 
@@ -47,21 +53,21 @@ func (l *RunList) Load() {
 	}
 }
 
-func (j RunList) Len() int {
+func (j *RunList) Len() int {
 	j.RLock()
 	defer j.RUnlock()
 
 	return len(j.elements)
 }
 
-func (l RunList) Less(i, j int) bool {
+func (l *RunList) Less(i, j int) bool {
 	l.RLock()
 	defer l.RUnlock()
 
 	return l.elements[i].(Run).Start.Before(l.elements[j].(Run).Start)
 }
 
-func (l RunList) Swap(i, j int) {
+func (l *RunList) Swap(i, j int) {
 	l.RLock()
 	defer l.RUnlock()
 
@@ -107,30 +113,44 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	return nil
 }
 
+
+
 func (l *RunList) execute(r *Run) {
 	r.Status = "Running"
 	for _, task := range r.Tasks {
-		r.Results = append(r.Results, Result{Start: time.Now(), Task: task})
-		result := &r.Results[len(r.Results)-1]
+		result := &Result{Start: time.Now(), Task: task}
+		r.Results = append(r.Results, result)
 		l.Update(*r)
 		shell, commandArg := getShell()
 		cmd := exec.Command(shell, commandArg, task.Script)
-		out, err := cmd.Output()
-		result.Output = string(out)
+
+		outPipe, err := cmd.StdoutPipe()
+		if err != nil {
+			reportRunError(l, r, result, err)
+			return
+		}
+		errPipe, err := cmd.StderrPipe()
+		if err != nil {
+			outPipe.Close()
+			reportRunError(l, r, result, err)
+			return
+		}
+		var outputWg sync.WaitGroup
+		outputWg.Add(1)
+		go result.muxIntoOutput(outPipe, errPipe, &outputWg)
+
+		if err := cmd.Start(); err != nil {
+			reportRunError(l, r, result, err)
+			return
+		}
+		outputWg.Wait()
+		if err := cmd.Wait(); err != nil {
+			reportRunError(l, r, result, err)
+			return
+		}
 		result.End = time.Now()
 		if err != nil {
-			result.Error = err.Error()
-			r.Status = "Failed"
-			r.End = time.Now()
-			l.Update(*r)
-			jobList := GetJobList()
-			job, err := jobList.Get(r.Job.Name)
-			if err != nil {
-				return
-			}
-			j := job.(Job)
-			j.Status = "Failing"
-			jobList.Update(job)
+			reportRunError(l, r, result, err)
 			return
 		}
 		l.Update(*r)
@@ -146,6 +166,63 @@ func (l *RunList) execute(r *Run) {
 	j.Status = "Ok" 
 	jobList.Update(job)
 	l.Update(*r)
+}
+
+func (result *Result) muxIntoOutput(stdout io.ReadCloser, stderr io.ReadCloser, done *sync.WaitGroup) {
+	defer done.Done()
+	outLines := consumeLines(stdout)
+	errLines := consumeLines(stderr)
+	for outLines != nil || errLines != nil {
+		select {
+		case line, ok := <-outLines:
+			if ok {
+				result.Output.WriteString(line + "\n")
+			} else {
+				outLines = nil
+			}
+		case line, ok := <-errLines:
+			if ok {
+				result.Output.WriteString(line + "\n")
+			} else {
+				errLines = nil
+			}
+		}
+	}
+}
+
+
+func consumeLines(reader io.ReadCloser) <-chan string {
+	lines := make(chan string)
+	go func() {
+		defer reader.Close()
+		defer close(lines)
+		scanner := bufio.NewScanner(reader)
+
+		for scanner.Scan() {
+			lines <- scanner.Text()
+		}
+		if err := scanner.Err(); err != nil {
+			log.Println("reading output: ", err)
+		}
+	}()
+	return lines
+}
+
+func reportRunError(l *RunList, r *Run, result *Result, err error) {
+	log.Println("Reporting error", err)
+	result.Error = err.Error()
+	r.Status = "Failed"
+	r.End = time.Now()
+	l.Update(*r)
+	jobList := GetJobList()
+	job, err := jobList.Get(r.Job.Name)
+	if err != nil {
+		return
+	}
+	j := job.(Job)
+	j.Status = "Failing"
+	jobList.Update(job)
+	return
 }
 
 func getShell() (string, string) {
