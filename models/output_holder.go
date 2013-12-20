@@ -1,8 +1,8 @@
 package models
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 )
 
 // An alias of Buffer that json encoder will marshal to a string and unmarshal from a string.
@@ -29,7 +29,6 @@ func (holder *OutputHolder) WriteString(s string) (int, error) {
 func (holder *OutputHolder) Reset() {
 	(*bytes.Buffer)(holder).Reset()
 }
-
 
 func (holder *OutputHolder) String() string {
 	return (*bytes.Buffer)(holder).String()

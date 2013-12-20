@@ -1,26 +1,24 @@
 package models
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
-	"os"
-	"os/exec"
-	"time"
-	"bufio"
 	"io"
 	"log"
+	"os"
+	"os/exec"
 	"sync"
+	"time"
 )
 
 type Result struct {
-	Start  time.Time `json:"start"`
-	End    time.Time `json:"end"`
-	Task   Task      `json:"task"`
-	Output OutputHolder   `json:"output"`
-	Error  string    `json:"error"`
+	Start  time.Time    `json:"start"`
+	End    time.Time    `json:"end"`
+	Task   Task         `json:"task"`
+	Output OutputHolder `json:"output"`
+	Error  string       `json:"error"`
 }
-
-
 
 type Run struct {
 	UUID    string    `json:"uuid"`
@@ -28,7 +26,7 @@ type Run struct {
 	Tasks   []Task    `json:"tasks"`
 	Start   time.Time `json:"start"`
 	End     time.Time `json:"end"`
-	Results []*Result  `json:"results"`
+	Results []*Result `json:"results"`
 	Status  string    `json:"status"`
 }
 
@@ -113,8 +111,6 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	return nil
 }
 
-
-
 func (l *RunList) execute(r *Run) {
 	r.Status = "Running"
 	for _, task := range r.Tasks {
@@ -163,7 +159,7 @@ func (l *RunList) execute(r *Run) {
 		return
 	}
 	j := job.(Job)
-	j.Status = "Ok" 
+	j.Status = "Ok"
 	jobList.Update(job)
 	l.Update(*r)
 }
@@ -189,7 +185,6 @@ func (result *Result) muxIntoOutput(stdout io.ReadCloser, stderr io.ReadCloser, 
 		}
 	}
 }
-
 
 func consumeLines(reader io.ReadCloser) <-chan string {
 	lines := make(chan string)
@@ -227,8 +222,8 @@ func reportRunError(l *RunList, r *Run, result *Result, err error) {
 
 func getShell() (string, string) {
 	var shell = os.Getenv("SHELL")
-	if ("" != shell ) {
-		return shell,"-c"
+	if "" != shell {
+		return shell, "-c"
 	}
 	return "cmd", "/C"
 }
