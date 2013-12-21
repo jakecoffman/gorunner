@@ -1,4 +1,4 @@
-var app = angular.module("GoRunnerApp", ['ui.bootstrap', 'gorunnerServices', 'ngRoute', 'ui.ace'], function ($routeProvider) {
+var app = angular.module("GoRunnerApp", ['ui.bootstrap', 'gorunnerServices', 'ngRoute', 'ui.ace', 'ngGrid'], function ($routeProvider) {
 	$routeProvider.when('/jobs', {
 		title: "jobs",
 		templateUrl: '/static/templates/jobs.html',

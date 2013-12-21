@@ -5,47 +5,16 @@
 			<span class="caret"></span>
 		</button>
 		<ul class="dropdown-menu pull-right">
-			<li><a href="javascript:void(0)" ng-click="promptJob()"><i class="icon-plus"></i> Add new job</a></li>
+			<li><a href="" ng-click="promptJob()"><i class="icon-plus"></i> Add new job</a></li>
 		</ul>
 	</div>
 </div>
 <h1>Jobs</h1>
-<table class="table">
-	<colgroup>
-		<col style="width: 65%">
-		<col style="width: 15%">
-		<col style="width: 10%">
-		<col style="width: 10%">
-		<col style="width: 0">
-	</colgroup>
-	<thead>
-	<tr>
-		<th>Job</th>
-		<th>Status</th>
-		<th>Triggers</th>
-		<th>Tasks</th>
-		<th>Execute</th>
-	</tr>
-	</thead>
-	<tbody>
-	<tr ng-repeat="job in jobs">
-		<td><a href="/#/jobs/{{ job.name }}">{{ job.name }}</a></td>
-		<td>{{ job.status }}</td>
-		<td>
-			<div class="badge badge-inverse" tooltip="{{job.triggers|join}}">
-				{{ job.triggers.length || 0}}
-			</div>
-		</td>
-		<td>
-			<div class="badge badge-inverse" tooltip="{{job.tasks|join}}">
-				{{ job.tasks.length || 0 }}
-			</div>
-		</td>
-		<td>
-			<button ng-click="quickRun(job.name)" class="btn">
-				<i class="icon-play"></i>
-			</button>
-		</td>
-	</tr>
-	</tbody>
-</table>
+<div class="row">
+	<button class="btn" ng-click="quickRun(selected[0].name)" ng-class="{disabled: selected.length == 0}"><i class="icon-play"></i> Run</button>
+	<a href="#/jobs/{{selected[0].name}}" class="btn" ng-class="{disabled: selected.length == 0}"><i class="icon-folder-open"></i> Open</a>
+</div>
+		<hr/>
+<div class="row">
+	<div class="ng-grid-style" ng-grid="gridOptions"></div>
+</div>

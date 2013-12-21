@@ -1,7 +1,21 @@
 function JobsCtl($scope, Job, Run) {
 	$scope.jobs = Job.query();
+	$scope.selected = [];
+	$scope.gridOptions = {
+		data: 'jobs',
+		plugins: [new ngGridFlexibleHeightPlugin()],
+		multiSelect: false,
+		selectedItems: $scope.selected,
+		columnDefs: [
+			{field: 'name', displayName: 'Name'},
+			{field: 'status', displayName: 'Status'},
+			{field: 'tasks', displayName: 'Tasks', cellTemplate: '/static/gridTemplates/count.html'},
+			{field: 'triggers', displayName: 'Triggers', cellTemplate: '/static/gridTemplates/count.html'}
+		]
+	};
 
 	$scope.quickRun = function(name) {
+		console.log(name);
 		var run = new Run();
 		run.job = name;
 		run.$save();
