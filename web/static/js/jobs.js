@@ -5,7 +5,6 @@ function JobsCtl($scope, Job, Run) {
 		var run = new Run();
 		run.job = name;
 		run.$save();
-		$scope.refreshRuns();
 	};
 
 	$scope.promptJob = function() {

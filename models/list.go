@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jakecoffman/gorunner/hub"
 	"sync"
 )
 
@@ -30,6 +31,7 @@ func (l *list) Get(id string) (elementer, error) {
 }
 
 func (l *list) Update(e elementer) error {
+	hub.Refresh()
 	l.Lock()
 	defer l.Unlock()
 
