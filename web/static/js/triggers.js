@@ -1,9 +1,16 @@
 function TriggersCtl($scope, Trigger) {
 	$scope.triggers = Trigger.query();
+	$scope.selected = [];
+	$scope.gridOptions = {
+		data: 'triggers',
+		plugins: [new ngGridFlexibleHeightPlugin()],
+		multiSelect: false,
+		selectedItems: $scope.selected
+	};
 
 	$scope.deleteTrigger = function(name) {
-		Trigger.$delete({id: name});
-		$scope.refreshTriggers();
+		Trigger.delete({id: name});
+		$scope.triggers = Trigger.query();
 	};
 
 	$scope.promptTrigger = function(){
@@ -12,7 +19,7 @@ function TriggersCtl($scope, Trigger) {
 			var trigger = new Trigger();
 			trigger.name = name;
 			trigger.$save();
-			$scope.refreshTriggers();
+			$scope.triggers = Trigger.query();
 		}
 	}
 }
