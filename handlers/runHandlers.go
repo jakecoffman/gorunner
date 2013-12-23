@@ -5,20 +5,11 @@ import (
 	"github.com/jakecoffman/gorunner/models"
 	"github.com/nu7hatch/gouuid"
 	"net/http"
-	"sort"
 	"strconv"
 )
 
-type Reverse struct {
-	sort.Interface
-}
-
-func (r Reverse) Less(i, j int) bool {
-	return r.Interface.Less(j, i)
-}
-
 func ListRuns(w http.ResponseWriter, r *http.Request) {
-	runsList := models.GetRunList()
+	runsList := models.GetRunListSorted()
 
 	offset := r.FormValue("offset")
 	length := r.FormValue("length")
@@ -42,7 +33,6 @@ func ListRuns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sort.Sort(Reverse{runsList})
 	recent := runsList.GetRecent(o, l)
 	marshal(recent, w)
 }

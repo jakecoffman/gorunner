@@ -3,6 +3,7 @@ package models
 import (
 	"io/ioutil"
 	"os"
+	"sort"
 )
 
 const (
@@ -42,6 +43,11 @@ func GetRunList() *RunList {
 	return &runList
 }
 
+func GetRunListSorted() *RunList {
+	sort.Sort(Reverse{&runList})
+	return &runList
+}
+
 func GetTaskList() *TaskList {
 	return &taskList
 }
@@ -72,4 +78,12 @@ func readFile(filePath string) []byte {
 		panic(err)
 	}
 	return bytes
+}
+
+type Reverse struct {
+	sort.Interface
+}
+
+func (r Reverse) Less(i, j int) bool {
+	return r.Interface.Less(j, i)
 }
