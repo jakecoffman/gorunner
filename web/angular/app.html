@@ -39,13 +39,14 @@
 <div class="container-fluid">
 	<div class="row-fluid">
 		<div class="span3">
-			<ul class="nav nav-list" id="side-nav">
+			<ul class="nav nav-list">
 				<li class="nav-header">Navigation</li>
 				<li ng-class="{active: title=='jobs'}"><a href="/#/jobs">Jobs</a></li>
 				<li ng-class="{active: title=='tasks'}"><a href="/#/tasks">Tasks</a></li>
 				<li ng-class="{active: title=='triggers'}"><a href="/#/triggers">Triggers</a></li>
 				<li><a href="/#/runs">Runs</a></li>
-				<li class="nav-header">Most Recent Runs</li>
+				<li class="nav-header" style="color: red" ng-hide="recent">Lost connection to server</li>
+				<li class="nav-header" ng-show="recent">Most Recent Runs</li>
 				<li class="history" ng-repeat="run in recent track by $index">
 					<a href='/#/runs/{{ run.uuid }}'><span class='label' ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running', 'label-important': run.status=='Failed'}"><i class="icon-spinner icon-spin" ng-show="run.status=='Running'"></i> {{ run.job.name }}</span>
 						<span class="pull-right">{{run.start|date:'MM/dd hh:mm:ss a'}}</span>

@@ -62,11 +62,14 @@ app.run(['$location', '$rootScope', function($location, $rootScope) {
 }]);
 
 app.controller('MainCtl', function ($scope, $timeout, Run) {
-	$scope.recent = [];
+	$scope.recent = null;
 
 	var conn = new WebSocket("ws://localhost:8090/ws");
 	conn.onclose = function(e) {
 		console.log("Connection closed");
+		$scope.$apply(function(){
+			$scope.recent = null;
+		});
 	};
 
 	conn.onopen = function(e) {
