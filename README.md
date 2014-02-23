@@ -6,7 +6,7 @@ As development occurs, I hope reusable code and interfaces develop since go is a
 relatively new language.
 
 Installation instructions
-=========================
+----
 
 	$ cd $GOPATH/src
 	$ go get github.com/jakecoffman/gorunner
@@ -16,7 +16,7 @@ Installation instructions
 Or, you know, whatever works. 
 
 Screenshots
-===========
+----
 
 Jobs are the bucket of things, such as triggers and tasks, that tell the system
 when to execute and what to do.
@@ -27,3 +27,11 @@ Tasks are editable in the browser.
 
 When a job executes, it creates a run which records the output of the tasks. 
 ![Runs page](http://www.coffshire.com/static/gorunner/runs.png "Runs page")
+
+Technologies
+----
+
+* Go (golang)
+* Javascript
+  * Angularjs
+  * Websockets
