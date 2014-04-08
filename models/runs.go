@@ -45,7 +45,7 @@ func (l *RunList) Load() {
 	if err != nil {
 		panic(err)
 	}
-	l.elements = nil
+	l.elements = []elementer{}
 	for _, run := range runs {
 		l.elements = append(l.elements, run)
 	}

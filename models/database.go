@@ -2,6 +2,7 @@ package models
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"sort"
 )
@@ -24,10 +25,10 @@ type ListWriter func([]byte, string)
 type ListReader func(string) []byte
 
 func InitDatabase() {
-	jobList = JobList{list{elements: make([]elementer, 10), fileName: jobsFile}}
-	taskList = TaskList{list{elements: make([]elementer, 10), fileName: tasksFile}}
-	triggerList = TriggerList{list{elements: make([]elementer, 10), fileName: triggersFile}}
-	runList = RunList{list{elements: make([]elementer, 10), fileName: runsFile}}
+	jobList = JobList{list{elements: []elementer{}, fileName: jobsFile}}
+	taskList = TaskList{list{elements: []elementer{}, fileName: tasksFile}}
+	triggerList = TriggerList{list{elements: []elementer{}, fileName: triggersFile}}
+	runList = RunList{list{elements: []elementer{}, fileName: runsFile}}
 
 	jobList.Load()
 	taskList.Load(readFile)
@@ -66,7 +67,7 @@ func writeFile(bytes []byte, filePath string) {
 func readFile(filePath string) []byte {
 	_, err := os.Stat(filePath)
 	if err != nil {
-		println("Couldn't read file, creating fresh:", filePath)
+		log.Println("Couldn't read file, creating fresh:", filePath)
 		err = ioutil.WriteFile(filePath, []byte("[]"), 0644)
 		if err != nil {
 			panic(err)

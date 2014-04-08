@@ -1,9 +1,10 @@
-package handlers
+package main
 
 import (
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	"github.com/jakecoffman/gorunner/hub"
-	"net/http"
 )
 
 func App(w http.ResponseWriter, r *http.Request) {

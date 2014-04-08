@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"log"
 )
 
 type Job struct {
@@ -53,14 +54,16 @@ type JobList struct {
 func (l *JobList) Load() {
 	bytes := readFile(l.fileName)
 	var jobs []Job
-	err := json.Unmarshal([]byte(string(bytes)), &jobs)
+	err := json.Unmarshal(bytes, &jobs)
+	log.Println("Jobs here: ", jobs)
 	if err != nil {
 		panic(err)
 	}
-	l.elements = nil
+	l.elements = []elementer{}
 	for _, job := range jobs {
 		l.elements = append(l.elements, job)
 	}
+	log.Println("Elements: ", l.elements)
 }
 
 func (l *JobList) GetJobsWithTrigger(triggerName string) (jobs []Job) {
