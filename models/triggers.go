@@ -24,7 +24,7 @@ func (l *TriggerList) Load(read ListReader) {
 	if err != nil {
 		panic(err)
 	}
-	l.elements = []elementer{}
+	l.elements = nil
 	for _, trigger := range triggers {
 		l.elements = append(l.elements, trigger)
 	}

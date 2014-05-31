@@ -73,11 +73,10 @@ app.controller('MainCtl', function ($scope, $timeout, Run) {
 	};
 
 	conn.onopen = function(e) {
-		console.log("Conencted");
+		console.log("Connected");
 	};
 
 	conn.onmessage = function(e){
-		console.log("Got data");
 		$scope.$apply(function(){
 			$scope.recent = JSON.parse(e.data);
 		});

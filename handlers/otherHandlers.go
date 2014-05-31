@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 )
 
 func App(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "web/angular/app.html")
+	http.ServeFile(w, r, "web/static/app.html")
 }
 
 func WsHandler(w http.ResponseWriter, r *http.Request) {

@@ -2,14 +2,27 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
 
-	"github.com/codegangsta/martini"
+	"github.com/gorilla/mux"
+	"github.com/jakecoffman/gorunner/handlers"
 	"github.com/jakecoffman/gorunner/hub"
 	"github.com/jakecoffman/gorunner/models"
-	"github.com/martini-contrib/render"
 )
 
-type Message map[string]interface{}
+const port = "localhost:8090"
+
+var r *mux.Router
+
+// This filter enables messing with the request/response before and after the normal handler
+func filter(w http.ResponseWriter, req *http.Request) {
+	r.ServeHTTP(w, req) // calls the normal handler
+	log.Printf("%s %s %s\n", req.RemoteAddr, req.Method, req.URL)
+}
 
 // TODO: Move to handlers package when more websocket handling is required.
 func getRecentRuns() []byte {
@@ -23,43 +36,24 @@ func getRecentRuns() []byte {
 }
 
 func main() {
-	models.InitDatabase()
+	wd, _ := os.Getwd()
+	println("Working directory", wd)
 
 	hub.NewHub(getRecentRuns)
 	go hub.Run()
 
-	m := martini.Classic()
+	// start the server and routes
+	server := &http.Server{Addr: port, Handler: nil}
+	r = mux.NewRouter()
+	handlers.Install(r)
+	models.InitDatabase()
+	http.HandleFunc("/", filter)
 
-	m.Use(render.Renderer())
-
-	m.Get("/ws", WsHandler)
-
-	m.Get("/jobs", ListJobs)
-	m.Post("/jobs/:name", AddJob)
-	m.Get("/jobs/:job", GetJob)
-	m.Delete("/jobs/:job", DeleteJob)
-	m.Post("/jobs/:job/tasks/:name", AddTaskToJob)
-	m.Delete("/jobs/:job/tasks/:task", RemoveTaskFromJob)
-	m.Post("/jobs/:job/tasks/:name", AddTriggerToJob)
-	m.Delete("/jobs/:job/tasks/:task", RemoveTaskFromJob)
-
-	m.Get("/tasks", ListTasks)
-	m.Post("/tasks/:name", AddTask)
-	m.Get("/tasks/:task", GetTask)
-	m.Put("/tasks/:task", UpdateTask)
-	m.Delete("/tasks/:task", DeleteTask)
-	m.Get("/tasks/:task/jobs", ListJobsForTask)
-
-	m.Get("/runs", ListRuns)
-	m.Post("/runs", AddRun)
-	m.Get("/runs/:run", GetRun)
-
-	m.Get("/triggers", ListTriggers)
-	m.Post("/triggers/:name", AddTrigger)
-	m.Get("/triggers/:trigger", GetTrigger)
-	m.Put("/triggers/:trigger", UpdateTrigger)
-	m.Delete("/triggers/:trigger", DeleteTrigger)
-	m.Get("/triggers/:trigger/jobs", ListJobsForTrigger)
-
-	m.Run()
+	fmt.Println("Running on " + port)
+	l, e := net.Listen("tcp", port)
+	if e != nil {
+		panic(e)
+	}
+	defer l.Close()
+	server.Serve(l)
 }

@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-	"sync"
-
 	"github.com/jakecoffman/gorunner/hub"
+	"sync"
 )
 
 type elementer interface {
@@ -83,14 +81,6 @@ func (l *list) Delete(id string) error {
 	l.elements = l.elements[:i+copy(l.elements[i:], l.elements[i+1:])]
 	l.save()
 	return nil
-}
-
-func (l list) List() []elementer {
-	l.RLock()
-	defer l.RUnlock()
-
-	log.Println("Elements List: ", l.elements)
-	return l.elements
 }
 
 func (l *list) Json() []byte {

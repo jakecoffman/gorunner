@@ -24,7 +24,9 @@ function JobsCtl($scope, Job, Run) {
 	$scope.promptJob = function() {
 		var name = prompt("Enter name of job:");
 		if(name) {
-			Job.addJob({id: name});
+			var job = new Job();
+			job.name = name;
+			job.$save();
 			window.location = "/#/jobs/" + name;
 		}
 	}

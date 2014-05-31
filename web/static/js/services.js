@@ -2,11 +2,10 @@ var gorunnerServices = angular.module('gorunnerServices', ['ngResource']);
 
 gorunnerServices.factory('Job', ['$resource', function($resource){
 	return $resource('/jobs/:id', {}, {
-		addJob: { method: "POST", params: {id: '@id'}},
 		update: { method: "PUT", params: {id: '@id'}},
-		addTask: { method: "POST", url: '/jobs/:id/tasks/:name', params: {id: '@id', name: "@name"}},
+		addTask: { method: "POST", url: '/jobs/:id/tasks', params: {id: '@id'}},
 		removeTask: { method: "DELETE", url: '/jobs/:id/tasks/:tidx',  params: {id: '@id', tid: '@tidx'}},
-		addTrigger: { method: "POST", url: '/jobs/:id/triggers/:name', params: {id: '@id', tid: "@name"}},
+		addTrigger: { method: "POST", url: '/jobs/:id/triggers', params: {id: '@id'}},
 		removeTrigger: { method: "DELETE", url: '/jobs/:id/triggers/:trigger', params: {id: '@id', trigger: '@trigger'}}
 	})
 }]);
