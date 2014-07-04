@@ -7,11 +7,6 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <style>
-        body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-        }
-    </style>
     <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
     <link href="/static/ext/angular/ng-grid.min.css" rel="stylesheet">
@@ -37,24 +32,37 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-xs-3">
-            <ul class="nav nav-list">
-                <li class="nav-header">Navigation</li>
-                <li ng-class="{active: title=='jobs'}"><a href="/#/jobs">Jobs</a></li>
-                <li ng-class="{active: title=='tasks'}"><a href="/#/tasks">Tasks</a></li>
-                <li ng-class="{active: title=='triggers'}"><a href="/#/triggers">Triggers</a></li>
-                <li><a href="/#/runs">Runs</a></li>
-                <li class="nav-header" style="color: red" ng-hide="recent">Lost connection to server</li>
-                <li class="nav-header" ng-show="recent">Most Recent Runs</li>
-                <li class="history" ng-repeat="run in recent track by $index">
-                    <a href='/#/runs/{{ run.uuid }}'>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Navigation
+                </div>
+                <div class="panel-body">
+                    <ul class="nav nav-pills nav-stacked">
+                        <li ng-class="{active: title=='jobs'}"><a href="/#/jobs">Jobs</a></li>
+                        <li ng-class="{active: title=='tasks'}"><a href="/#/tasks">Tasks</a></li>
+                        <li ng-class="{active: title=='triggers'}"><a href="/#/triggers">Triggers</a></li>
+                        <li><a href="/#/runs">Runs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span style="color: red" ng-hide="recent">Lost connection to server</span>
+                    <span ng-show="recent">Most Recent Runs</span>
+                </div>
+                <div class="panel-body">
+                    <ul class="nav nav-pills nav-stacked">
+                        <li class="history" ng-repeat="run in recent track by $index">
+                            <a href='/#/runs/{{ run.uuid }}'>
                         <span class='label'
                               ng-class="{'label-success': run.status=='Done', 'label-info': run.status=='Running', 'label-important': run.status=='Failed'}">
                             <i class="icon-spinner icon-spin" ng-show="run.status=='Running'"></i> {{ run.job.name }}
                         </span>
-                        <span class="pull-right">{{run.start|date:'MM/dd hh:mm:ss a'}}</span>
-                    </a>
-                </li>
-            </ul>
+                                <span class="pull-right">{{run.start|date:'MM/dd hh:mm:ss a'}}</span>
+                            </a>
+                        </li>
+                </div>
+            </div>
         </div>
         <div class="col-xs-9">
             <div ng-view></div>
