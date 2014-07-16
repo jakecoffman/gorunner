@@ -30,3 +30,5 @@ Go's ability to handle many connections would be beneficial for:
 * running multiple build scripts and monitoring progress
 * connecting to a cluster of gorunner servers
 * live updates to builds in the UI via websockets, etc
+
+![gorunner](https://raw.githubusercontent.com/jakecoffman/gorunner/master/promo.png "gorunner")
