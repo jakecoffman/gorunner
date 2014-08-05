@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -16,10 +17,19 @@ type Hub struct {
 	onRefresh   func() []byte
 }
 
-func NewHub(f func() []byte) {
+func onRefresh() []byte {
+	runsList := GetRunListSorted()
+	recent := runsList.GetRecent(0, 10)
+	bytes, err := json.Marshal(recent)
+	if err != nil {
+		panic(err.Error())
+	}
+	return bytes
+}
+
+func NewHub() {
 	h = Hub{
 		refresh:     make(chan bool),
-		onRefresh:   f,
 		register:    make(chan *Connection),
 		unregister:  make(chan *Connection),
 		connections: make(map[*Connection]bool),
@@ -44,7 +54,7 @@ func HubLoop() {
 		case c := <-h.register:
 			fmt.Println("Connect")
 			h.connections[c] = true
-			bytes := h.onRefresh()
+			bytes := onRefresh()
 			c.send <- bytes
 		case c := <-h.unregister:
 			fmt.Println("Disconnect")
@@ -52,7 +62,7 @@ func HubLoop() {
 			close(c.send)
 		case <-h.refresh:
 			fmt.Println("Refreshing")
-			bytes := h.onRefresh()
+			bytes := onRefresh()
 			for c := range h.connections {
 				select {
 				case c.send <- bytes:

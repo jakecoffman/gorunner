@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"net"
 	"net/http"
 	"os"
 
@@ -13,44 +10,59 @@ import (
 
 const port = "localhost:8090"
 
-var r *mux.Router
-
-// This filter enables messing with the request/response before and after the normal handler
-func filter(w http.ResponseWriter, req *http.Request) {
-	r.ServeHTTP(w, req) // calls the normal handler
-	log.Printf("%s %s %s\n", req.RemoteAddr, req.Method, req.URL)
+type routeDetail struct {
+	route   string
+	handler func(http.ResponseWriter, *http.Request)
+	method  string
 }
 
-// TODO: Move to handlers package when more websocket handling is required.
-func getRecentRuns() []byte {
-	runsList := GetRunListSorted()
-	recent := runsList.GetRecent(0, 10)
-	bytes, err := json.Marshal(recent)
-	if err != nil {
-		panic(err.Error())
-	}
-	return bytes
+var routes []routeDetail = []routeDetail{
+	{"/", App, "GET"},
+	{"/ws", WsHandler, "GET"},
+	{"/jobs", ListJobs, "GET"},
+	{"/jobs", AddJob, "POST"},
+	{"/jobs/{job}", GetJob, "GET"},
+	{"/jobs/{job}", DeleteJob, "DELETE"},
+	{"/jobs/{job}/tasks", AddTaskToJob, "POST"},
+	{"/jobs/{job}/tasks/{task}", RemoveTaskFromJob, "DELETE"},
+	{"/jobs/{job}/triggers/", AddTriggerToJob, "POST"},
+	{"/jobs/{job}/triggers/{trigger}", RemoveTriggerFromJob, "DELETE"},
+
+	{"/tasks", ListTasks, "GET"},
+	{"/tasks", AddTask, "POST"},
+	{"/tasks/{task}", GetTask, "GET"},
+	{"/tasks/{task}", UpdateTask, "PUT"},
+	{"/tasks/{task}", DeleteTask, "DELETE"},
+	{"/tasks/{task}/jobs", ListJobsForTask, "GET"},
+
+	{"/runs", ListRuns, "GET"},
+	{"/runs", AddRun, "POST"},
+	{"/runs/{run}", GetRun, "GET"},
+
+	{"/triggers", ListTriggers, "GET"},
+	{"/triggers", AddTrigger, "POST"},
+	{"/triggers/{trigger}", GetTrigger, "GET"},
+	{"/triggers/{trigger}", UpdateTrigger, "PUT"},
+	{"/triggers/{trigger}", DeleteTrigger, "DELETE"},
+	{"/triggers/{trigger}/jobs", ListJobsForTrigger, "GET"},
 }
 
 func main() {
 	wd, _ := os.Getwd()
 	println("Working directory", wd)
 
-	NewHub(getRecentRuns)
+	NewHub()
 	go HubLoop()
 
-	// start the server and routes
-	server := &http.Server{Addr: port, Handler: nil}
-	r = mux.NewRouter()
-	Install(r)
+	r := mux.NewRouter()
+	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
+
+	for _, detail := range routes {
+		r.HandleFunc(detail.route, detail.handler).Methods(detail.method)
+	}
+
 	InitDatabase()
-	http.HandleFunc("/", filter)
 
 	fmt.Println("Running on " + port)
-	l, e := net.Listen("tcp", port)
-	if e != nil {
-		panic(e)
-	}
-	defer l.Close()
-	server.Serve(l)
+	http.ListenAndServe(port, r)
 }
