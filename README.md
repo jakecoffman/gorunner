@@ -8,11 +8,11 @@ This project is a work-in-progress but development is not very active. I accept 
 Installation instructions
 ----
 
+Assuming $GOPATH/bin is on your path:
+
 	go get github.com/jakecoffman/gorunner
 	cd $GOPATH/src/github.com/jakecoffman/gorunner
-	go run main.go
-	
-Or, you know, whatever works. 
+	gorunner
 
 Technologies
 ----

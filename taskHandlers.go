@@ -1,24 +1,24 @@
-package handlers
+package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jakecoffman/gorunner/models"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func ListTasks(w http.ResponseWriter, r *http.Request) {
-	taskList := models.GetTaskList()
+	taskList := GetTaskList()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(taskList.Json()))
 }
 
 func AddTask(w http.ResponseWriter, r *http.Request) {
-	taskList := models.GetTaskList()
+	taskList := GetTaskList()
 
 	payload := unmarshal(r.Body, "name", w)
 
-	err := taskList.Append(models.Task{payload["name"], ""})
+	err := taskList.Append(Task{payload["name"], ""})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -27,7 +27,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTask(w http.ResponseWriter, r *http.Request) {
-	taskList := models.GetTaskList()
+	taskList := GetTaskList()
 
 	vars := mux.Vars(r)
 	task, err := taskList.Get(vars["task"])
@@ -40,7 +40,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
-	taskList := models.GetTaskList()
+	taskList := GetTaskList()
 
 	vars := mux.Vars(r)
 	task, err := taskList.Get(vars["task"])
@@ -51,13 +51,13 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	payload := unmarshal(r.Body, "script", w)
 
-	t := task.(models.Task)
+	t := task.(Task)
 	t.Script = payload["script"]
 	taskList.Update(t)
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
-	taskList := models.GetTaskList()
+	taskList := GetTaskList()
 
 	vars := mux.Vars(r)
 	task, err := taskList.Get(vars["task"])
@@ -70,7 +70,7 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListJobsForTask(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 	vars := mux.Vars(r)
 	jobs := jobList.GetJobsWithTask(vars["task"])
 	marshal(jobs, w)

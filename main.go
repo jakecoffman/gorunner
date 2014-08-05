@@ -9,9 +9,6 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/jakecoffman/gorunner/handlers"
-	"github.com/jakecoffman/gorunner/hub"
-	"github.com/jakecoffman/gorunner/models"
 )
 
 const port = "localhost:8090"
@@ -26,7 +23,7 @@ func filter(w http.ResponseWriter, req *http.Request) {
 
 // TODO: Move to handlers package when more websocket handling is required.
 func getRecentRuns() []byte {
-	runsList := models.GetRunListSorted()
+	runsList := GetRunListSorted()
 	recent := runsList.GetRecent(0, 10)
 	bytes, err := json.Marshal(recent)
 	if err != nil {
@@ -39,14 +36,14 @@ func main() {
 	wd, _ := os.Getwd()
 	println("Working directory", wd)
 
-	hub.NewHub(getRecentRuns)
-	go hub.Run()
+	NewHub(getRecentRuns)
+	go HubLoop()
 
 	// start the server and routes
 	server := &http.Server{Addr: port, Handler: nil}
 	r = mux.NewRouter()
-	handlers.Install(r)
-	models.InitDatabase()
+	Install(r)
+	InitDatabase()
 	http.HandleFunc("/", filter)
 
 	fmt.Println("Running on " + port)

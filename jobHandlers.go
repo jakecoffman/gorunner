@@ -1,23 +1,22 @@
-package handlers
+package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jakecoffman/gorunner/executor"
-	"github.com/jakecoffman/gorunner/models"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func ListJobs(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(models.GetJobList().Json()))
+	w.Write([]byte(GetJobList().Json()))
 }
 
 func AddJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	payload := unmarshal(r.Body, "name", w)
 
-	err := jobList.Append(models.Job{Name: payload["name"], Status: "New"})
+	err := jobList.Append(Job{Name: payload["name"], Status: "New"})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -26,7 +25,7 @@ func AddJob(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
@@ -39,7 +38,7 @@ func GetJob(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
@@ -56,7 +55,7 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
@@ -64,7 +63,7 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	j := job.(models.Job)
+	j := job.(Job)
 
 	payload := unmarshal(r.Body, "task", w)
 	j.AppendTask(payload["task"])
@@ -74,7 +73,7 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 }
 
 func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
@@ -82,7 +81,7 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	j := job.(models.Job)
+	j := job.(Job)
 
 	taskPosition, err := strconv.Atoi(vars["task"])
 	if err != nil {
@@ -94,7 +93,7 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
@@ -102,25 +101,25 @@ func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	j := job.(models.Job)
+	j := job.(Job)
 
 	payload := unmarshal(r.Body, "trigger", w)
 
 	j.AppendTrigger(payload["trigger"])
-	triggerList := models.GetTriggerList()
+	triggerList := GetTriggerList()
 	t, err := triggerList.Get(payload["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	executor.AddTrigger(t.(models.Trigger))
+	ArmTrigger(t.(Trigger))
 	jobList.Update(j)
 
 	w.WriteHeader(201)
 }
 
 func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
-	jobList := models.GetJobList()
+	jobList := GetJobList()
 
 	vars := mux.Vars(r)
 	job, err := jobList.Get(vars["job"])
@@ -128,7 +127,7 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	j := job.(models.Job)
+	j := job.(Job)
 
 	t := vars["trigger"]
 	j.DeleteTrigger(t)
@@ -138,6 +137,6 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 	jobs := jobList.GetJobsWithTrigger(t)
 
 	if len(jobs) == 0 {
-		executor.RemoveTrigger(t)
+		DisarmTrigger(t)
 	}
 }

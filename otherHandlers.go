@@ -1,10 +1,9 @@
-package handlers
+package main
 
 import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/jakecoffman/gorunner/hub"
 )
 
 func App(w http.ResponseWriter, r *http.Request) {
@@ -21,9 +20,9 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	c := hub.NewConnection(ws)
-	hub.Register(c)
-	defer hub.Unregister(c)
+	c := NewConnection(ws)
+	Register(c)
+	defer Unregister(c)
 	go c.Writer()
 	c.Reader()
 }

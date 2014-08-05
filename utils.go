@@ -1,11 +1,12 @@
-package handlers
+package main
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func marshal(item interface{}, w http.ResponseWriter) {

@@ -1,15 +1,15 @@
-package handlers
+package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jakecoffman/gorunner/models"
-	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/nu7hatch/gouuid"
 )
 
 func ListRuns(w http.ResponseWriter, r *http.Request) {
-	runsList := models.GetRunListSorted()
+	runsList := GetRunListSorted()
 
 	offset := r.FormValue("offset")
 	length := r.FormValue("length")
@@ -38,9 +38,9 @@ func ListRuns(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddRun(w http.ResponseWriter, r *http.Request) {
-	runsList := models.GetRunList()
-	jobsList := models.GetJobList()
-	tasksList := models.GetTaskList()
+	runsList := GetRunList()
+	jobsList := GetJobList()
+	tasksList := GetTaskList()
 
 	payload := unmarshal(r.Body, "job", w)
 
@@ -49,7 +49,7 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	j := job.(models.Job)
+	j := job.(Job)
 
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -57,13 +57,13 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tasks []models.Task
+	var tasks []Task
 	for _, taskName := range j.Tasks {
 		task, err := tasksList.Get(taskName)
 		if err != nil {
 			panic(err)
 		}
-		t := task.(models.Task)
+		t := task.(Task)
 		tasks = append(tasks, t)
 	}
 	err = runsList.AddRun(id.String(), j, tasks)
@@ -79,7 +79,7 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRun(w http.ResponseWriter, r *http.Request) {
-	runList := models.GetRunList()
+	runList := GetRunList()
 
 	vars := mux.Vars(r)
 	run, err := runList.Get(vars["run"])
