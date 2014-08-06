@@ -18,7 +18,7 @@ func mockListReaderFactory(value string) ListReader {
 }
 
 func TestTriggerLoad(t *testing.T) {
-	triggerList = TriggerList{list{elements: make([]elementer, 10), fileName: "somefile.txt"}}
+	triggerList := TriggerList{list{elements: make([]elementer, 10), fileName: "somefile.txt"}}
 	value := `[{"name":"test","schedule":"* * * * * *"}]`
 	triggerList.Load(mockListReaderFactory(value))
 	if string(triggerList.dumps()) != value {

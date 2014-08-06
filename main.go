@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -47,7 +46,12 @@ var routes = []struct {
 }
 
 type context struct {
-	hub *Hub
+	hub         *Hub
+	executor    *Executor
+	jobList     *JobList
+	taskList    *TaskList
+	triggerList *TriggerList
+	runList     *RunList
 }
 
 type appHandler struct {
@@ -62,12 +66,33 @@ func (t appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	wd, _ := os.Getwd()
-	println("Working directory", wd)
+	log.Println("Working directory", wd)
 
-	hub := NewHub()
+	jobList := &JobList{
+		list{elements: []elementer{}, fileName: jobsFile},
+	}
+	taskList := &TaskList{
+		list{elements: []elementer{}, fileName: tasksFile},
+	}
+	triggerList := &TriggerList{
+		list{elements: []elementer{}, fileName: triggersFile},
+	}
+	runList := &RunList{
+		list{elements: []elementer{}, fileName: runsFile},
+		jobList,
+	}
+
+	jobList.Load()
+	taskList.Load(readFile)
+	triggerList.Load(readFile)
+	runList.Load()
+
+	hub := NewHub(runList)
 	go hub.HubLoop()
 
-	appContext := &context{hub}
+	executor := NewExecutor(jobList, taskList, runList)
+
+	appContext := &context{hub, executor, jobList, taskList, triggerList, runList}
 
 	r := mux.NewRouter()
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
@@ -76,8 +101,6 @@ func main() {
 		r.Handle(detail.route, appHandler{appContext, detail.handler}).Methods(detail.method)
 	}
 
-	InitDatabase()
-
-	fmt.Println("Running on " + port)
+	log.Println("Running on " + port)
 	http.ListenAndServe(port, r)
 }

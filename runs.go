@@ -36,6 +36,7 @@ func (r Run) ID() string {
 
 type RunList struct {
 	list
+	jobList *JobList
 }
 
 func (l *RunList) Load() {
@@ -93,6 +94,7 @@ func (l RunList) GetRecent(offset, length int) []elementer {
 
 func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	run := Run{UUID: UUID, Job: job, Tasks: tasks, Start: time.Now(), Status: "New"}
+	// check to make sure that UUID doesn't already exist
 	var found bool = false
 	for _, j := range j.elements {
 		if run.UUID == j.(Run).UUID {
@@ -105,6 +107,7 @@ func (j *RunList) AddRun(UUID string, job Job, tasks []Task) error {
 	j.Lock()
 	defer j.Unlock()
 
+	// add the run to the list and execute
 	j.elements = append(j.elements, run)
 	go j.execute(&run)
 	j.save()
@@ -153,14 +156,13 @@ func (l *RunList) execute(r *Run) {
 	}
 	r.End = time.Now()
 	r.Status = "Done"
-	jobList := GetJobList()
-	job, err := jobList.Get(r.Job.Name)
+	job, err := l.jobList.Get(r.Job.Name)
 	if err != nil {
 		return
 	}
 	j := job.(Job)
 	j.Status = "Ok"
-	jobList.Update(job)
+	l.jobList.Update(job)
 	l.Update(*r)
 }
 
@@ -209,14 +211,13 @@ func reportRunError(l *RunList, r *Run, result *Result, err error) {
 	r.Status = "Failed"
 	r.End = time.Now()
 	l.Update(*r)
-	jobList := GetJobList()
-	job, err := jobList.Get(r.Job.Name)
+	job, err := l.jobList.Get(r.Job.Name)
 	if err != nil {
 		return
 	}
 	j := job.(Job)
 	j.Status = "Failing"
-	jobList.Update(job)
+	l.jobList.Update(job)
 	return
 }
 

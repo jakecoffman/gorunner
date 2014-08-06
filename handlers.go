@@ -35,15 +35,13 @@ func WsHandler(c *context, w http.ResponseWriter, r *http.Request) {
 // Jobs
 
 func ListJobs(c *context, w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(GetJobList().Json()))
+	w.Write([]byte(c.jobList.Json()))
 }
 
 func AddJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	payload := unmarshal(r.Body, "name", w)
 
-	err := jobList.Append(Job{Name: payload["name"], Status: "New"})
+	err := c.jobList.Append(Job{Name: payload["name"], Status: "New"})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,10 +50,8 @@ func AddJob(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := c.jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -65,16 +61,14 @@ func GetJob(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := c.jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	err = jobList.Delete(job.ID())
+	err = c.jobList.Delete(job.ID())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -82,10 +76,8 @@ func DeleteJob(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func AddTaskToJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := c.jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -94,16 +86,14 @@ func AddTaskToJob(c *context, w http.ResponseWriter, r *http.Request) {
 
 	payload := unmarshal(r.Body, "task", w)
 	j.AppendTask(payload["task"])
-	jobList.Update(j)
+	c.jobList.Update(j)
 
 	w.WriteHeader(201)
 }
 
 func RemoveTaskFromJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := c.jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -116,14 +106,12 @@ func RemoveTaskFromJob(c *context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	j.DeleteTask(taskPosition)
-	jobList.Update(j)
+	c.jobList.Update(j)
 }
 
 func AddTriggerToJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := c.jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -133,23 +121,20 @@ func AddTriggerToJob(c *context, w http.ResponseWriter, r *http.Request) {
 	payload := unmarshal(r.Body, "trigger", w)
 
 	j.AppendTrigger(payload["trigger"])
-	triggerList := GetTriggerList()
-	t, err := triggerList.Get(payload["trigger"])
+	t, err := c.triggerList.Get(payload["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ArmTrigger(t.(Trigger))
-	jobList.Update(j)
+	c.executor.ArmTrigger(t.(Trigger))
+	c.jobList.Update(j)
 
 	w.WriteHeader(201)
 }
 
 func RemoveTriggerFromJob(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
-
 	vars := mux.Vars(r)
-	job, err := jobList.Get(vars["job"])
+	job, err := c.jobList.Get(vars["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -158,21 +143,19 @@ func RemoveTriggerFromJob(c *context, w http.ResponseWriter, r *http.Request) {
 
 	t := vars["trigger"]
 	j.DeleteTrigger(t)
-	jobList.Update(j)
+	c.jobList.Update(j)
 
 	// If Trigger is no longer attached to any Jobs, remove it from Cron to save cycles
-	jobs := jobList.GetJobsWithTrigger(t)
+	jobs := c.jobList.GetJobsWithTrigger(t)
 
 	if len(jobs) == 0 {
-		DisarmTrigger(t)
+		c.executor.DisarmTrigger(t)
 	}
 }
 
 // Run
 
 func ListRuns(c *context, w http.ResponseWriter, r *http.Request) {
-	runsList := GetRunListSorted()
-
 	offset := r.FormValue("offset")
 	length := r.FormValue("length")
 
@@ -195,18 +178,14 @@ func ListRuns(c *context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recent := runsList.GetRecent(o, l)
+	recent := c.runList.GetRecent(o, l)
 	marshal(recent, w)
 }
 
 func AddRun(c *context, w http.ResponseWriter, r *http.Request) {
-	runsList := GetRunList()
-	jobsList := GetJobList()
-	tasksList := GetTaskList()
-
 	payload := unmarshal(r.Body, "job", w)
 
-	job, err := jobsList.Get(payload["job"])
+	job, err := c.jobList.Get(payload["job"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -221,14 +200,14 @@ func AddRun(c *context, w http.ResponseWriter, r *http.Request) {
 
 	var tasks []Task
 	for _, taskName := range j.Tasks {
-		task, err := tasksList.Get(taskName)
+		task, err := c.taskList.Get(taskName)
 		if err != nil {
 			panic(err)
 		}
 		t := task.(Task)
 		tasks = append(tasks, t)
 	}
-	err = runsList.AddRun(id.String(), j, tasks)
+	err = c.runList.AddRun(id.String(), j, tasks)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -241,10 +220,8 @@ func AddRun(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRun(c *context, w http.ResponseWriter, r *http.Request) {
-	runList := GetRunList()
-
 	vars := mux.Vars(r)
-	run, err := runList.Get(vars["run"])
+	run, err := c.runList.Get(vars["run"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -255,18 +232,14 @@ func GetRun(c *context, w http.ResponseWriter, r *http.Request) {
 
 // Tasks
 func ListTasks(c *context, w http.ResponseWriter, r *http.Request) {
-	taskList := GetTaskList()
-
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(taskList.Json()))
+	w.Write([]byte(c.taskList.Json()))
 }
 
 func AddTask(c *context, w http.ResponseWriter, r *http.Request) {
-	taskList := GetTaskList()
-
 	payload := unmarshal(r.Body, "name", w)
 
-	err := taskList.Append(Task{payload["name"], ""})
+	err := c.taskList.Append(Task{payload["name"], ""})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -275,10 +248,8 @@ func AddTask(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTask(c *context, w http.ResponseWriter, r *http.Request) {
-	taskList := GetTaskList()
-
 	vars := mux.Vars(r)
-	task, err := taskList.Get(vars["task"])
+	task, err := c.taskList.Get(vars["task"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -288,10 +259,8 @@ func GetTask(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTask(c *context, w http.ResponseWriter, r *http.Request) {
-	taskList := GetTaskList()
-
 	vars := mux.Vars(r)
-	task, err := taskList.Get(vars["task"])
+	task, err := c.taskList.Get(vars["task"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -301,53 +270,44 @@ func UpdateTask(c *context, w http.ResponseWriter, r *http.Request) {
 
 	t := task.(Task)
 	t.Script = payload["script"]
-	taskList.Update(t)
+	c.taskList.Update(t)
 }
 
 func DeleteTask(c *context, w http.ResponseWriter, r *http.Request) {
-	taskList := GetTaskList()
-
 	vars := mux.Vars(r)
-	task, err := taskList.Get(vars["task"])
+	task, err := c.taskList.Get(vars["task"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	taskList.Delete(task.ID())
+	c.taskList.Delete(task.ID())
 }
 
 func ListJobsForTask(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
 	vars := mux.Vars(r)
-	jobs := jobList.GetJobsWithTask(vars["task"])
+	jobs := c.jobList.GetJobsWithTask(vars["task"])
 	marshal(jobs, w)
 }
 
 // Triggers
 
 func ListTriggers(c *context, w http.ResponseWriter, r *http.Request) {
-	triggerList := GetTriggerList()
-
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(triggerList.Json()))
+	w.Write([]byte(c.triggerList.Json()))
 }
 
 func AddTrigger(c *context, w http.ResponseWriter, r *http.Request) {
-	triggerList := GetTriggerList()
-
 	payload := unmarshal(r.Body, "name", w)
 
 	trigger := Trigger{Name: payload["name"]}
-	triggerList.Append(trigger)
+	c.triggerList.Append(trigger)
 	w.WriteHeader(201)
 }
 
 func GetTrigger(c *context, w http.ResponseWriter, r *http.Request) {
-	triggerList := GetTriggerList()
-
 	vars := mux.Vars(r)
-	trigger, err := triggerList.Get(vars["trigger"])
+	trigger, err := c.triggerList.Get(vars["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -357,10 +317,8 @@ func GetTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTrigger(c *context, w http.ResponseWriter, r *http.Request) {
-	triggerList := GetTriggerList()
-
 	vars := mux.Vars(r)
-	trigger, err := triggerList.Get(vars["trigger"])
+	trigger, err := c.triggerList.Get(vars["trigger"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -370,24 +328,20 @@ func UpdateTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 
 	t := trigger.(Trigger)
 	t.Schedule = payload["cron"]
-	ArmTrigger(t)
-	err = triggerList.Update(t)
+	c.executor.ArmTrigger(t)
+	err = c.triggerList.Update(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func DeleteTrigger(c *context, w http.ResponseWriter, r *http.Request) {
-	triggerList := GetTriggerList()
-
 	vars := mux.Vars(r)
-
-	triggerList.Delete(vars["trigger"])
+	c.triggerList.Delete(vars["trigger"])
 }
 
 func ListJobsForTrigger(c *context, w http.ResponseWriter, r *http.Request) {
-	jobList := GetJobList()
 	vars := mux.Vars(r)
-	jobs := jobList.GetJobsWithTrigger(vars["trigger"])
+	jobs := c.jobList.GetJobsWithTrigger(vars["trigger"])
 	marshal(jobs, w)
 }

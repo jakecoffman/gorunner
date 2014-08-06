@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/gorilla/websocket"
 )
@@ -12,25 +13,16 @@ type Hub struct {
 	register    chan *Connection
 	unregister  chan *Connection
 	refresh     chan bool
-	onRefresh   func() []byte
+	runList     *RunList
 }
 
-func onRefresh() []byte {
-	runsList := GetRunListSorted()
-	recent := runsList.GetRecent(0, 10)
-	bytes, err := json.Marshal(recent)
-	if err != nil {
-		panic(err.Error())
-	}
-	return bytes
-}
-
-func NewHub() *Hub {
+func NewHub(runList *RunList) *Hub {
 	return &Hub{
 		refresh:     make(chan bool),
 		register:    make(chan *Connection),
 		unregister:  make(chan *Connection),
 		connections: make(map[*Connection]bool),
+		runList:     runList,
 	}
 }
 
@@ -46,13 +38,23 @@ func (h *Hub) Refresh() {
 	h.refresh <- true
 }
 
+func (h *Hub) onRefresh() []byte {
+	sort.Sort(Reverse{h.runList})
+	recent := h.runList.GetRecent(0, 10)
+	bytes, err := json.Marshal(recent)
+	if err != nil {
+		panic(err.Error())
+	}
+	return bytes
+}
+
 func (h *Hub) HubLoop() {
 	for {
 		select {
 		case c := <-h.register:
 			fmt.Println("Connect")
 			h.connections[c] = true
-			bytes := onRefresh()
+			bytes := h.onRefresh()
 			c.send <- bytes
 		case c := <-h.unregister:
 			fmt.Println("Disconnect")
@@ -60,7 +62,7 @@ func (h *Hub) HubLoop() {
 			close(c.send)
 		case <-h.refresh:
 			fmt.Println("Refreshing")
-			bytes := onRefresh()
+			bytes := h.onRefresh()
 			for c := range h.connections {
 				select {
 				case c.send <- bytes:

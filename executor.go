@@ -1,56 +1,64 @@
 package main
 
 import (
-	"github.com/jakecoffman/cron"
+	cronService "github.com/jakecoffman/cron"
 	"github.com/nu7hatch/gouuid"
 )
 
-var c *cron.Cron
 var triggers map[string]struct{}
 
-func init() {
-	c = cron.New()
-	c.Start()
-	// c.AddFunc("0 * * * *", func() { fmt.Println("test ran at " + time.Now().Format("2006-01-02 15:04:05")) }, "test")
+type Executor struct {
+	cron     *cronService.Cron
+	jobList  *JobList
+	taskList *TaskList
+	runList  *RunList
 }
 
-func ArmTrigger(t Trigger) {
-	c.AddFunc(t.Schedule, func() { findAndRun(t) }, t.Name)
+func NewExecutor(jobList *JobList, taskList *TaskList, runList *RunList) *Executor {
+	cron := cronService.New()
+	cron.Start()
+	return &Executor{
+		cron,
+		jobList,
+		taskList,
+		runList,
+	}
 }
 
-func DisarmTrigger(name string) {
-	c.RemoveJob(name)
+func (e Executor) ArmTrigger(t Trigger) {
+	e.cron.AddFunc(t.Schedule, func() { e.findAndRun(t) }, t.Name)
+}
+
+func (e Executor) DisarmTrigger(name string) {
+	e.cron.RemoveJob(name)
 	println("Trigger has been removed")
 }
 
 // Walks through each job, seeing if the trigger who's turn it is to execute is attached. Executes those jobs.
-func findAndRun(t Trigger) {
-	jobList := GetJobList()
-	jobs := jobList.GetJobsWithTrigger(t.ID())
+func (e Executor) findAndRun(t Trigger) {
+	jobs := e.jobList.GetJobsWithTrigger(t.ID())
 	for _, job := range jobs {
 		println("Executing job " + job.Name)
-		runnit(job)
+		e.runnit(job)
 	}
 }
 
 // Gathers the tasks attached to the given job and executes them.
-func runnit(j Job) {
-	tasksList := GetTaskList()
-	runsList := GetRunList()
+func (e Executor) runnit(j Job) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		panic(err)
 	}
 	var tasks []Task
 	for _, taskName := range j.Tasks {
-		task, err := tasksList.Get(taskName)
+		task, err := e.taskList.Get(taskName)
 		if err != nil {
 			panic(err)
 		}
 		t := task.(Task)
 		tasks = append(tasks, t)
 	}
-	err = runsList.AddRun(id.String(), j, tasks)
+	err = e.runList.AddRun(id.String(), j, tasks)
 	if err != nil {
 		panic(err)
 	}
