@@ -1,6 +1,8 @@
 gorunner
 ========
 
+[![Build Status](https://secure.travis-ci.org/jakecoffman/gorunner.png?branch=master)](http://travis-ci.org/jakecoffman/gorunner)
+
 gorunner is an attempt to create a continuous integration web server written in Golang.
 
 This project is a work-in-progress but development is not very active. I accept pull requests but also if you want to take it in a different direction let me know and we can collaborate.
