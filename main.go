@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -10,13 +11,11 @@ import (
 
 const port = "localhost:8090"
 
-type routeDetail struct {
+var routes = []struct {
 	route   string
-	handler func(http.ResponseWriter, *http.Request)
+	handler func(*context, http.ResponseWriter, *http.Request)
 	method  string
-}
-
-var routes []routeDetail = []routeDetail{
+}{
 	{"/", App, "GET"},
 	{"/ws", WsHandler, "GET"},
 	{"/jobs", ListJobs, "GET"},
@@ -47,18 +46,34 @@ var routes []routeDetail = []routeDetail{
 	{"/triggers/{trigger}/jobs", ListJobsForTrigger, "GET"},
 }
 
+type context struct {
+	hub *Hub
+}
+
+type appHandler struct {
+	*context
+	handler func(*context, http.ResponseWriter, *http.Request)
+}
+
+func (t appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	t.handler(t.context, w, r)
+	log.Println(r.URL, r.Method, r.RemoteAddr)
+}
+
 func main() {
 	wd, _ := os.Getwd()
 	println("Working directory", wd)
 
-	NewHub()
-	go HubLoop()
+	hub := NewHub()
+	go hub.HubLoop()
+
+	appContext := &context{hub}
 
 	r := mux.NewRouter()
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
 
 	for _, detail := range routes {
-		r.HandleFunc(detail.route, detail.handler).Methods(detail.method)
+		r.Handle(detail.route, appHandler{appContext, detail.handler}).Methods(detail.method)
 	}
 
 	InitDatabase()

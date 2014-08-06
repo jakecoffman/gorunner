@@ -7,8 +7,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var h Hub
-
 type Hub struct {
 	connections map[*Connection]bool
 	register    chan *Connection
@@ -27,8 +25,8 @@ func onRefresh() []byte {
 	return bytes
 }
 
-func NewHub() {
-	h = Hub{
+func NewHub() *Hub {
+	return &Hub{
 		refresh:     make(chan bool),
 		register:    make(chan *Connection),
 		unregister:  make(chan *Connection),
@@ -36,19 +34,19 @@ func NewHub() {
 	}
 }
 
-func Register(c *Connection) {
+func (h *Hub) Register(c *Connection) {
 	h.register <- c
 }
 
-func Unregister(c *Connection) {
+func (h *Hub) Unregister(c *Connection) {
 	h.unregister <- c
 }
 
-func Refresh() {
+func (h *Hub) Refresh() {
 	h.refresh <- true
 }
 
-func HubLoop() {
+func (h *Hub) HubLoop() {
 	for {
 		select {
 		case c := <-h.register:

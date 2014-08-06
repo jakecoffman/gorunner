@@ -30,7 +30,6 @@ func (l *list) Get(id string) (elementer, error) {
 }
 
 func (l *list) Update(e elementer) error {
-	Refresh()
 	l.Lock()
 	defer l.Unlock()
 

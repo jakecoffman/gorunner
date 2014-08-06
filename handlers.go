@@ -11,11 +11,11 @@ import (
 
 // General
 
-func App(w http.ResponseWriter, r *http.Request) {
+func App(c *context, w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "web/static/app.html")
 }
 
-func WsHandler(w http.ResponseWriter, r *http.Request) {
+func WsHandler(c *context, w http.ResponseWriter, r *http.Request) {
 	// Upgrade the HTTP connection to a websocket
 	ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
 	if _, ok := err.(websocket.HandshakeError); ok {
@@ -25,20 +25,20 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	c := NewConnection(ws)
-	Register(c)
-	defer Unregister(c)
-	go c.Writer()
-	c.Reader()
+	context := NewConnection(ws)
+	c.hub.Register(context)
+	defer c.hub.Unregister(context)
+	go context.Writer()
+	context.Reader()
 }
 
 // Jobs
 
-func ListJobs(w http.ResponseWriter, r *http.Request) {
+func ListJobs(c *context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(GetJobList().Json()))
 }
 
-func AddJob(w http.ResponseWriter, r *http.Request) {
+func AddJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	payload := unmarshal(r.Body, "name", w)
@@ -51,7 +51,7 @@ func AddJob(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 }
 
-func GetJob(w http.ResponseWriter, r *http.Request) {
+func GetJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	vars := mux.Vars(r)
@@ -64,7 +64,7 @@ func GetJob(w http.ResponseWriter, r *http.Request) {
 	marshal(job, w)
 }
 
-func DeleteJob(w http.ResponseWriter, r *http.Request) {
+func DeleteJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	vars := mux.Vars(r)
@@ -81,7 +81,7 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
+func AddTaskToJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	vars := mux.Vars(r)
@@ -99,7 +99,7 @@ func AddTaskToJob(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 }
 
-func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
+func RemoveTaskFromJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	vars := mux.Vars(r)
@@ -119,7 +119,7 @@ func RemoveTaskFromJob(w http.ResponseWriter, r *http.Request) {
 	jobList.Update(j)
 }
 
-func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
+func AddTriggerToJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	vars := mux.Vars(r)
@@ -145,7 +145,7 @@ func AddTriggerToJob(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 }
 
-func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
+func RemoveTriggerFromJob(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 
 	vars := mux.Vars(r)
@@ -170,7 +170,7 @@ func RemoveTriggerFromJob(w http.ResponseWriter, r *http.Request) {
 
 // Run
 
-func ListRuns(w http.ResponseWriter, r *http.Request) {
+func ListRuns(c *context, w http.ResponseWriter, r *http.Request) {
 	runsList := GetRunListSorted()
 
 	offset := r.FormValue("offset")
@@ -199,7 +199,7 @@ func ListRuns(w http.ResponseWriter, r *http.Request) {
 	marshal(recent, w)
 }
 
-func AddRun(w http.ResponseWriter, r *http.Request) {
+func AddRun(c *context, w http.ResponseWriter, r *http.Request) {
 	runsList := GetRunList()
 	jobsList := GetJobList()
 	tasksList := GetTaskList()
@@ -240,7 +240,7 @@ func AddRun(w http.ResponseWriter, r *http.Request) {
 	marshal(idResponse, w)
 }
 
-func GetRun(w http.ResponseWriter, r *http.Request) {
+func GetRun(c *context, w http.ResponseWriter, r *http.Request) {
 	runList := GetRunList()
 
 	vars := mux.Vars(r)
@@ -254,14 +254,14 @@ func GetRun(w http.ResponseWriter, r *http.Request) {
 }
 
 // Tasks
-func ListTasks(w http.ResponseWriter, r *http.Request) {
+func ListTasks(c *context, w http.ResponseWriter, r *http.Request) {
 	taskList := GetTaskList()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(taskList.Json()))
 }
 
-func AddTask(w http.ResponseWriter, r *http.Request) {
+func AddTask(c *context, w http.ResponseWriter, r *http.Request) {
 	taskList := GetTaskList()
 
 	payload := unmarshal(r.Body, "name", w)
@@ -274,7 +274,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 }
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
+func GetTask(c *context, w http.ResponseWriter, r *http.Request) {
 	taskList := GetTaskList()
 
 	vars := mux.Vars(r)
@@ -287,7 +287,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	marshal(task, w)
 }
 
-func UpdateTask(w http.ResponseWriter, r *http.Request) {
+func UpdateTask(c *context, w http.ResponseWriter, r *http.Request) {
 	taskList := GetTaskList()
 
 	vars := mux.Vars(r)
@@ -304,7 +304,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskList.Update(t)
 }
 
-func DeleteTask(w http.ResponseWriter, r *http.Request) {
+func DeleteTask(c *context, w http.ResponseWriter, r *http.Request) {
 	taskList := GetTaskList()
 
 	vars := mux.Vars(r)
@@ -317,7 +317,7 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskList.Delete(task.ID())
 }
 
-func ListJobsForTask(w http.ResponseWriter, r *http.Request) {
+func ListJobsForTask(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 	vars := mux.Vars(r)
 	jobs := jobList.GetJobsWithTask(vars["task"])
@@ -326,14 +326,14 @@ func ListJobsForTask(w http.ResponseWriter, r *http.Request) {
 
 // Triggers
 
-func ListTriggers(w http.ResponseWriter, r *http.Request) {
+func ListTriggers(c *context, w http.ResponseWriter, r *http.Request) {
 	triggerList := GetTriggerList()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(triggerList.Json()))
 }
 
-func AddTrigger(w http.ResponseWriter, r *http.Request) {
+func AddTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 	triggerList := GetTriggerList()
 
 	payload := unmarshal(r.Body, "name", w)
@@ -343,7 +343,7 @@ func AddTrigger(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 }
 
-func GetTrigger(w http.ResponseWriter, r *http.Request) {
+func GetTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 	triggerList := GetTriggerList()
 
 	vars := mux.Vars(r)
@@ -356,7 +356,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 	marshal(trigger, w)
 }
 
-func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
+func UpdateTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 	triggerList := GetTriggerList()
 
 	vars := mux.Vars(r)
@@ -377,7 +377,7 @@ func UpdateTrigger(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
+func DeleteTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 	triggerList := GetTriggerList()
 
 	vars := mux.Vars(r)
@@ -385,7 +385,7 @@ func DeleteTrigger(w http.ResponseWriter, r *http.Request) {
 	triggerList.Delete(vars["trigger"])
 }
 
-func ListJobsForTrigger(w http.ResponseWriter, r *http.Request) {
+func ListJobsForTrigger(c *context, w http.ResponseWriter, r *http.Request) {
 	jobList := GetJobList()
 	vars := mux.Vars(r)
 	jobs := jobList.GetJobsWithTrigger(vars["trigger"])
