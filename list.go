@@ -26,7 +26,7 @@ func (l *list) Get(id string) (elementer, error) {
 			return e, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Element '%s' not found", id))
+	return nil, fmt.Errorf("Element '%s' not found", id)
 }
 
 func (l *list) Update(e elementer) error {
@@ -64,7 +64,7 @@ func (l *list) Delete(id string) error {
 	l.Lock()
 	defer l.Unlock()
 
-	var found bool = false
+	found := false
 	var i int
 	var thing elementer
 	for i, thing = range l.elements {
@@ -74,25 +74,18 @@ func (l *list) Delete(id string) error {
 		}
 	}
 	if !found {
-		return errors.New(fmt.Sprintf("Element '%s' not found for deletion", id))
+		return fmt.Errorf("Element '%s' not found for deletion", id)
 	}
 	l.elements = l.elements[:i+copy(l.elements[i:], l.elements[i+1:])]
 	l.save()
 	return nil
 }
 
-func (l *list) Json() []byte {
-	l.RLock()
-	defer l.RUnlock()
-
-	return l.dumps()
-}
-
-func (l list) save() {
+func (l *list) save() {
 	writeFile(l.dumps(), l.fileName)
 }
 
-func (l list) dumps() []byte {
+func (l *list) dumps() []byte {
 	bytes, err := json.Marshal(l.elements)
 	if err != nil {
 		panic(err)
@@ -100,13 +93,13 @@ func (l list) dumps() []byte {
 	return bytes
 }
 
-func (l list) Dump() []elementer {
+func (l *list) Dump() []elementer {
 	l.RLock()
 	defer l.RUnlock()
 	return l.elements
 }
 
-func (l list) pos(id string) (int, error) {
+func (l *list) pos(id string) (int, error) {
 	for i, e := range l.elements {
 		if e.ID() == id {
 			return i, nil

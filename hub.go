@@ -76,19 +76,15 @@ func (h *Hub) HubLoop() {
 	}
 }
 
-// Goroutine wrapper for a websocket connection. Anything sent on the `send` channel
-// will be written to the websocket.
 type Connection struct {
 	ws   *websocket.Conn
 	send chan []byte
 }
 
-// Creates and returns a new Connection object
 func NewConnection(ws *websocket.Conn) *Connection {
 	return &Connection{send: make(chan []byte, 256), ws: ws}
 }
 
-// Listens forever on the websocket, performing actions as needed.
 func (c *Connection) Reader() {
 	for {
 		_, msg, err := c.ws.ReadMessage()
@@ -102,7 +98,6 @@ func (c *Connection) Reader() {
 	c.ws.Close()
 }
 
-// Writes anything on the send channel to the websocket.
 func (c *Connection) Writer() {
 	for msg := range c.send {
 		err := c.ws.WriteMessage(websocket.TextMessage, msg)

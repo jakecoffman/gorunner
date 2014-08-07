@@ -15,32 +15,32 @@ var routes = []struct {
 	handler func(*context, http.ResponseWriter, *http.Request) (int, interface{})
 	method  string
 }{
-	{"/jobs", ListJobs, "GET"},
-	{"/jobs", AddJob, "POST"},
-	{"/jobs/{job}", GetJob, "GET"},
-	{"/jobs/{job}", DeleteJob, "DELETE"},
-	{"/jobs/{job}/tasks", AddTaskToJob, "POST"},
-	{"/jobs/{job}/tasks/{task}", RemoveTaskFromJob, "DELETE"},
-	{"/jobs/{job}/triggers/", AddTriggerToJob, "POST"},
-	{"/jobs/{job}/triggers/{trigger}", RemoveTriggerFromJob, "DELETE"},
+	{"/jobs", listJobs, "GET"},
+	{"/jobs", addJob, "POST"},
+	{"/jobs/{job}", getJob, "GET"},
+	{"/jobs/{job}", deleteJob, "DELETE"},
+	{"/jobs/{job}/tasks", addTaskToJob, "POST"},
+	{"/jobs/{job}/tasks/{task}", removeTaskFromJob, "DELETE"},
+	{"/jobs/{job}/triggers/", addTriggerToJob, "POST"},
+	{"/jobs/{job}/triggers/{trigger}", removeTriggerFromJob, "DELETE"},
 
-	{"/tasks", ListTasks, "GET"},
-	{"/tasks", AddTask, "POST"},
-	{"/tasks/{task}", GetTask, "GET"},
-	{"/tasks/{task}", UpdateTask, "PUT"},
-	{"/tasks/{task}", DeleteTask, "DELETE"},
-	{"/tasks/{task}/jobs", ListJobsForTask, "GET"},
+	{"/tasks", listTasks, "GET"},
+	{"/tasks", addTask, "POST"},
+	{"/tasks/{task}", getTask, "GET"},
+	{"/tasks/{task}", updateTask, "PUT"},
+	{"/tasks/{task}", deleteTask, "DELETE"},
+	{"/tasks/{task}/jobs", listJobsForTask, "GET"},
 
-	{"/runs", ListRuns, "GET"},
-	{"/runs", AddRun, "POST"},
-	{"/runs/{run}", GetRun, "GET"},
+	{"/runs", listRuns, "GET"},
+	{"/runs", addRun, "POST"},
+	{"/runs/{run}", getRun, "GET"},
 
-	{"/triggers", ListTriggers, "GET"},
-	{"/triggers", AddTrigger, "POST"},
-	{"/triggers/{trigger}", GetTrigger, "GET"},
-	{"/triggers/{trigger}", UpdateTrigger, "PUT"},
-	{"/triggers/{trigger}", DeleteTrigger, "DELETE"},
-	{"/triggers/{trigger}/jobs", ListJobsForTrigger, "GET"},
+	{"/triggers", listTriggers, "GET"},
+	{"/triggers", addTrigger, "POST"},
+	{"/triggers/{trigger}", getTrigger, "GET"},
+	{"/triggers/{trigger}", updateTrigger, "PUT"},
+	{"/triggers/{trigger}", deleteTrigger, "DELETE"},
+	{"/triggers/{trigger}/jobs", listJobsForTrigger, "GET"},
 }
 
 type context struct {
@@ -99,8 +99,8 @@ func main() {
 
 	// non REST routes
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
-	r.HandleFunc("/", App).Methods("GET")
-	r.Handle("/ws", appHandler{appContext, WsHandler}).Methods("GET")
+	r.HandleFunc("/", app).Methods("GET")
+	r.Handle("/ws", appHandler{appContext, wsHandler}).Methods("GET")
 
 	for _, detail := range routes {
 		r.Handle(detail.route, appHandler{appContext, detail.handler}).Methods(detail.method)
