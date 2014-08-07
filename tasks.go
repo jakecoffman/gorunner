@@ -24,7 +24,7 @@ func (l *TaskList) Load(read ListReader) {
 	if err != nil {
 		panic(err)
 	}
-	l.elements = nil
+	l.elements = []elementer{}
 	for _, task := range tasks {
 		l.elements = append(l.elements, task)
 	}

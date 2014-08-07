@@ -100,6 +100,12 @@ func (l list) dumps() []byte {
 	return bytes
 }
 
+func (l list) Dump() []elementer {
+	l.RLock()
+	defer l.RUnlock()
+	return l.elements
+}
+
 func (l list) pos(id string) (int, error) {
 	for i, e := range l.elements {
 		if e.ID() == id {

@@ -57,7 +57,7 @@ func (l *JobList) Load() {
 	if err != nil {
 		panic(err)
 	}
-	l.elements = nil
+	l.elements = []elementer{}
 	for _, job := range jobs {
 		l.elements = append(l.elements, job)
 	}

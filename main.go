@@ -12,11 +12,9 @@ const port = "localhost:8090"
 
 var routes = []struct {
 	route   string
-	handler func(*context, http.ResponseWriter, *http.Request)
+	handler func(*context, http.ResponseWriter, *http.Request) (int, interface{})
 	method  string
 }{
-	{"/", App, "GET"},
-	{"/ws", WsHandler, "GET"},
 	{"/jobs", ListJobs, "GET"},
 	{"/jobs", AddJob, "POST"},
 	{"/jobs/{job}", GetJob, "GET"},
@@ -56,12 +54,15 @@ type context struct {
 
 type appHandler struct {
 	*context
-	handler func(*context, http.ResponseWriter, *http.Request)
+	handler func(*context, http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 func (t appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	t.handler(t.context, w, r)
-	log.Println(r.URL, r.Method, r.RemoteAddr)
+	code, data := t.handler(t.context, w, r)
+	marshal(data, w)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	log.Println(r.URL, "-", r.Method, "-", code, r.RemoteAddr)
 }
 
 func main() {
@@ -95,7 +96,11 @@ func main() {
 	appContext := &context{hub, executor, jobList, taskList, triggerList, runList}
 
 	r := mux.NewRouter()
+
+	// non REST routes
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("web/")))
+	r.HandleFunc("/", App).Methods("GET")
+	r.Handle("/ws", appHandler{appContext, WsHandler}).Methods("GET")
 
 	for _, detail := range routes {
 		r.Handle(detail.route, appHandler{appContext, detail.handler}).Methods(detail.method)
