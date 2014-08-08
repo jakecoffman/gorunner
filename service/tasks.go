@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"encoding/json"
@@ -17,8 +17,14 @@ type TaskList struct {
 	list
 }
 
-func (l *TaskList) Load(read ListReader) {
-	bytes := read(l.fileName)
+func NewTaskList() *TaskList {
+	return &TaskList{
+		list{elements: []elementer{}, fileName: tasksFile},
+	}
+}
+
+func (l *TaskList) Load() {
+	bytes := readFile(l.fileName)
 	var tasks []Task
 	err := json.Unmarshal([]byte(string(bytes)), &tasks)
 	if err != nil {

@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"encoding/json"
@@ -17,8 +17,14 @@ type TriggerList struct {
 	list
 }
 
-func (l *TriggerList) Load(read ListReader) {
-	bytes := read(l.fileName)
+func NewTriggerList() *TriggerList {
+	return &TriggerList{
+		list{elements: []elementer{}, fileName: triggersFile},
+	}
+}
+
+func (l *TriggerList) Load() {
+	bytes := readFile(l.fileName)
 	var triggers []Trigger
 	err := json.Unmarshal([]byte(string(bytes)), &triggers)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	. "github.com/jakecoffman/gorunner/service"
 )
 
 const port = "localhost:8090"
@@ -69,23 +70,14 @@ func main() {
 	wd, _ := os.Getwd()
 	log.Println("Working directory", wd)
 
-	jobList := &JobList{
-		list{elements: []elementer{}, fileName: jobsFile},
-	}
-	taskList := &TaskList{
-		list{elements: []elementer{}, fileName: tasksFile},
-	}
-	triggerList := &TriggerList{
-		list{elements: []elementer{}, fileName: triggersFile},
-	}
-	runList := &RunList{
-		list{elements: []elementer{}, fileName: runsFile},
-		jobList,
-	}
+	jobList := NewJobList()
+	taskList := NewTaskList()
+	triggerList := NewTriggerList()
+	runList := NewRunList(jobList)
 
 	jobList.Load()
-	taskList.Load(readFile)
-	triggerList.Load(readFile)
+	taskList.Load()
+	triggerList.Load()
 	runList.Load()
 
 	hub := NewHub(runList)

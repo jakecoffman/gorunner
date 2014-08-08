@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"encoding/json"
@@ -48,6 +48,12 @@ func (j *Job) DeleteTrigger(trigger string) error {
 
 type JobList struct {
 	list
+}
+
+func NewJobList() *JobList {
+	return &JobList{
+		list{elements: []elementer{}, fileName: jobsFile},
+	}
 }
 
 func (l *JobList) Load() {

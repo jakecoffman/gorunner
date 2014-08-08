@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	. "github.com/jakecoffman/gorunner/service"
 	"github.com/nu7hatch/gouuid"
 )
 

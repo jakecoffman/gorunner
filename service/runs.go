@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"bufio"
@@ -37,6 +37,13 @@ func (r Run) ID() string {
 type RunList struct {
 	list
 	jobList *JobList
+}
+
+func NewRunList(jobList *JobList) *RunList {
+	return &RunList{
+		list{elements: []elementer{}, fileName: runsFile},
+		jobList,
+	}
 }
 
 func (l *RunList) Load() {
