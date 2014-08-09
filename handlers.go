@@ -22,7 +22,7 @@ func app(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "web/static/app.html")
 }
 
-func wsHandler(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func wsHandler(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	// Upgrade the HTTP connection to a websocket
 	ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
 	if _, ok := err.(websocket.HandshakeError); ok {
@@ -30,33 +30,33 @@ func wsHandler(c *context, w http.ResponseWriter, r *http.Request) (int, interfa
 	} else if err != nil {
 		return http.StatusInternalServerError, errHelp(err.Error())
 	}
-	context := NewConnection(ws)
-	c.hub.Register(context)
-	defer c.hub.Unregister(context)
-	go context.Writer()
-	context.Reader()
+	conn := NewConnection(ws)
+	c.Hub().Register(conn)
+	defer c.Hub().Unregister(conn)
+	go conn.Writer()
+	conn.Reader()
 	return http.StatusOK, nothing
 }
 
 // Jobs
 
-func listJobs(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
-	return http.StatusOK, c.jobList.Dump()
+func listJobs(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+	return http.StatusOK, c.JobList().Dump()
 }
 
-func addJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func addJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	payload := unmarshal(r.Body, "name", w)
 
-	err := c.jobList.Append(Job{Name: payload["name"], Status: "New"})
+	err := c.JobList().Append(Job{Name: payload["name"], Status: "New"})
 	if err != nil {
 		return http.StatusInternalServerError, err.Error()
 	}
 	return http.StatusCreated, nothing
 }
 
-func getJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func getJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	job, err := c.jobList.Get(vars["job"])
+	job, err := c.JobList().Get(vars["job"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -64,14 +64,14 @@ func getJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{
 	return http.StatusOK, job
 }
 
-func deleteJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func deleteJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	job, err := c.jobList.Get(vars["job"])
+	job, err := c.JobList().Get(vars["job"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
 
-	err = c.jobList.Delete(job.ID())
+	err = c.JobList().Delete(job.ID())
 	if err != nil {
 		return http.StatusInternalServerError, err.Error()
 	}
@@ -79,9 +79,9 @@ func deleteJob(c *context, w http.ResponseWriter, r *http.Request) (int, interfa
 	return http.StatusOK, nothing
 }
 
-func addTaskToJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func addTaskToJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	job, err := c.jobList.Get(vars["job"])
+	job, err := c.JobList().Get(vars["job"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -89,14 +89,14 @@ func addTaskToJob(c *context, w http.ResponseWriter, r *http.Request) (int, inte
 
 	payload := unmarshal(r.Body, "task", w)
 	j.AppendTask(payload["task"])
-	c.jobList.Update(j)
+	c.JobList().Update(j)
 
 	return http.StatusCreated, nothing
 }
 
-func removeTaskFromJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func removeTaskFromJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	job, err := c.jobList.Get(vars["job"])
+	job, err := c.JobList().Get(vars["job"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -107,13 +107,13 @@ func removeTaskFromJob(c *context, w http.ResponseWriter, r *http.Request) (int,
 		return http.StatusBadRequest, err.Error()
 	}
 	j.DeleteTask(taskPosition)
-	c.jobList.Update(j)
+	c.JobList().Update(j)
 	return http.StatusOK, nothing
 }
 
-func addTriggerToJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func addTriggerToJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	job, err := c.jobList.Get(vars["job"])
+	job, err := c.JobList().Get(vars["job"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -122,19 +122,19 @@ func addTriggerToJob(c *context, w http.ResponseWriter, r *http.Request) (int, i
 	payload := unmarshal(r.Body, "trigger", w)
 
 	j.AppendTrigger(payload["trigger"])
-	t, err := c.triggerList.Get(payload["trigger"])
+	t, err := c.TriggerList().Get(payload["trigger"])
 	if err != nil {
 		return http.StatusInternalServerError, err.Error()
 	}
-	c.executor.ArmTrigger(t.(Trigger))
-	c.jobList.Update(j)
+	c.Executor().ArmTrigger(t.(Trigger))
+	c.JobList().Update(j)
 
 	return http.StatusCreated, nothing
 }
 
-func removeTriggerFromJob(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func removeTriggerFromJob(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	job, err := c.jobList.Get(vars["job"])
+	job, err := c.JobList().Get(vars["job"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -142,20 +142,20 @@ func removeTriggerFromJob(c *context, w http.ResponseWriter, r *http.Request) (i
 
 	t := vars["trigger"]
 	j.DeleteTrigger(t)
-	c.jobList.Update(j)
+	c.JobList().Update(j)
 
 	// If Trigger is no longer attached to any Jobs, remove it from Cron to save cycles
-	jobs := c.jobList.GetJobsWithTrigger(t)
+	jobs := c.JobList().GetJobsWithTrigger(t)
 
 	if len(jobs) == 0 {
-		c.executor.DisarmTrigger(t)
+		c.Executor().DisarmTrigger(t)
 	}
 	return http.StatusOK, nothing
 }
 
 // Run
 
-func listRuns(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func listRuns(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	offset := r.FormValue("offset")
 	length := r.FormValue("length")
 
@@ -176,13 +176,13 @@ func listRuns(c *context, w http.ResponseWriter, r *http.Request) (int, interfac
 		return http.StatusBadRequest, err.Error()
 	}
 
-	return http.StatusOK, c.runList.GetRecent(o, l)
+	return http.StatusOK, c.RunList().GetRecent(o, l)
 }
 
-func addRun(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func addRun(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	payload := unmarshal(r.Body, "job", w)
 
-	job, err := c.jobList.Get(payload["job"])
+	job, err := c.JobList().Get(payload["job"])
 	if err != nil {
 		return http.StatusInternalServerError, err.Error()
 	}
@@ -195,14 +195,14 @@ func addRun(c *context, w http.ResponseWriter, r *http.Request) (int, interface{
 
 	var tasks []Task
 	for _, taskName := range j.Tasks {
-		task, err := c.taskList.Get(taskName)
+		task, err := c.TaskList().Get(taskName)
 		if err != nil {
 			panic(err)
 		}
 		t := task.(Task)
 		tasks = append(tasks, t)
 	}
-	err = c.runList.AddRun(id.String(), j, tasks)
+	err = c.RunList().AddRun(id.String(), j, tasks)
 	if err != nil {
 		return http.StatusInternalServerError, err.Error()
 	}
@@ -210,9 +210,9 @@ func addRun(c *context, w http.ResponseWriter, r *http.Request) (int, interface{
 	return http.StatusCreated, map[string]string{"uuid": id.String()}
 }
 
-func getRun(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func getRun(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	run, err := c.runList.Get(vars["run"])
+	run, err := c.RunList().Get(vars["run"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -221,83 +221,83 @@ func getRun(c *context, w http.ResponseWriter, r *http.Request) (int, interface{
 
 // Tasks
 
-func listTasks(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
-	return http.StatusOK, c.taskList.Dump()
+func listTasks(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+	return http.StatusOK, c.TaskList().Dump()
 }
 
-func addTask(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func addTask(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	payload := unmarshal(r.Body, "name", w)
 
-	err := c.taskList.Append(Task{payload["name"], ""})
+	err := c.TaskList().Append(Task{payload["name"], ""})
 	if err != nil {
 		return http.StatusBadRequest, err.Error()
 	}
 	return http.StatusCreated, nothing
 }
 
-func getTask(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func getTask(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	task, err := c.taskList.Get(vars["task"])
+	task, err := c.TaskList().Get(vars["task"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
 	return http.StatusOK, task
 }
 
-func updateTask(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func updateTask(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	task, err := c.taskList.Get(vars["task"])
+	task, err := c.TaskList().Get(vars["task"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
 	payload := unmarshal(r.Body, "script", w)
 	t := task.(Task)
 	t.Script = payload["script"]
-	c.taskList.Update(t)
+	c.TaskList().Update(t)
 	return http.StatusOK, nothing
 }
 
-func deleteTask(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func deleteTask(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	task, err := c.taskList.Get(vars["task"])
+	task, err := c.TaskList().Get(vars["task"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
-	c.taskList.Delete(task.ID())
+	c.TaskList().Delete(task.ID())
 	return http.StatusOK, nothing
 }
 
-func listJobsForTask(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func listJobsForTask(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	jobs := c.jobList.GetJobsWithTask(vars["task"])
+	jobs := c.JobList().GetJobsWithTask(vars["task"])
 	return http.StatusOK, jobs
 }
 
 // Triggers
 
-func listTriggers(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
-	return http.StatusOK, c.triggerList.Dump()
+func listTriggers(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+	return http.StatusOK, c.TriggerList().Dump()
 }
 
-func addTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func addTrigger(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	payload := unmarshal(r.Body, "name", w)
 	trigger := Trigger{Name: payload["name"]}
-	c.triggerList.Append(trigger)
+	c.TriggerList().Append(trigger)
 	return http.StatusCreated, nothing
 }
 
-func getTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func getTrigger(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	trigger, err := c.triggerList.Get(vars["trigger"])
+	trigger, err := c.TriggerList().Get(vars["trigger"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
 	return http.StatusNotFound, trigger
 }
 
-func updateTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func updateTrigger(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	trigger, err := c.triggerList.Get(vars["trigger"])
+	trigger, err := c.TriggerList().Get(vars["trigger"])
 	if err != nil {
 		return http.StatusNotFound, err.Error()
 	}
@@ -306,8 +306,8 @@ func updateTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, int
 
 	t := trigger.(Trigger)
 	t.Schedule = payload["cron"]
-	c.executor.ArmTrigger(t)
-	err = c.triggerList.Update(t)
+	c.Executor().ArmTrigger(t)
+	err = c.TriggerList().Update(t)
 	if err != nil {
 		return http.StatusInternalServerError, err.Error()
 	}
@@ -315,14 +315,14 @@ func updateTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, int
 	return http.StatusOK, nothing
 }
 
-func deleteTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func deleteTrigger(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	c.triggerList.Delete(vars["trigger"])
+	c.TriggerList().Delete(vars["trigger"])
 	return http.StatusOK, nothing
 }
 
-func listJobsForTrigger(c *context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
+func listJobsForTrigger(c context, w http.ResponseWriter, r *http.Request) (int, interface{}) {
 	vars := mux.Vars(r)
-	jobs := c.jobList.GetJobsWithTrigger(vars["trigger"])
+	jobs := c.JobList().GetJobsWithTrigger(vars["trigger"])
 	return http.StatusOK, jobs
 }

@@ -13,7 +13,7 @@ const port = "localhost:8090"
 
 var routes = []struct {
 	route   string
-	handler func(*context, http.ResponseWriter, *http.Request) (int, interface{})
+	handler func(context, http.ResponseWriter, *http.Request) (int, interface{})
 	method  string
 }{
 	{"/jobs", listJobs, "GET"},
@@ -44,7 +44,7 @@ var routes = []struct {
 	{"/triggers/{trigger}/jobs", listJobsForTrigger, "GET"},
 }
 
-type context struct {
+type ctx struct {
 	hub         *Hub
 	executor    *Executor
 	jobList     *JobList
@@ -53,13 +53,46 @@ type context struct {
 	runList     *RunList
 }
 
+func (t ctx) Hub() *Hub {
+	return t.hub
+}
+
+func (t ctx) Executor() *Executor {
+	return t.executor
+}
+
+func (t ctx) JobList() *JobList {
+	return t.jobList
+}
+
+func (t ctx) TaskList() *TaskList {
+	return t.taskList
+}
+
+func (t ctx) TriggerList() *TriggerList {
+	return t.triggerList
+}
+
+func (t ctx) RunList() *RunList {
+	return t.runList
+}
+
+type context interface {
+	Hub() *Hub
+	Executor() *Executor
+	JobList() *JobList
+	TaskList() *TaskList
+	TriggerList() *TriggerList
+	RunList() *RunList
+}
+
 type appHandler struct {
-	*context
-	handler func(*context, http.ResponseWriter, *http.Request) (int, interface{})
+	*ctx
+	handler func(context, http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 func (t appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code, data := t.handler(t.context, w, r)
+	code, data := t.handler(t.ctx, w, r)
 	marshal(data, w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -85,7 +118,7 @@ func main() {
 
 	executor := NewExecutor(jobList, taskList, runList)
 
-	appContext := &context{hub, executor, jobList, taskList, triggerList, runList}
+	appContext := &ctx{hub, executor, jobList, taskList, triggerList, runList}
 
 	r := mux.NewRouter()
 
